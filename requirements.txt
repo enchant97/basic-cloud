@@ -1,0 +1,15 @@
+# the web api
+fastapi
+# database
+tortoise-orm
+# password & tokens
+python-jose[cryptography]
+passlib[bcrypt]
+# keep an 'eye out' for file changes
+watchdog
+# read/write files
+aiofiles
+# html templates
+jinja2
+# server config
+pydantic[dotenv]
