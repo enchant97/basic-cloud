@@ -5,7 +5,8 @@ from pydantic import BaseSettings
 
 
 class Settings(BaseSettings):
-    DATA_PATH: Path
+    DATA_PATH: Path = Path("data")
+    DB_URI: str = "sqlite://app_data.db"
 
     class Config:
         env_file = '.env'
