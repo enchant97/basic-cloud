@@ -1,5 +1,6 @@
 # the web api
 fastapi
+uvicorn
 # database
 tortoise-orm
 # password & tokens
