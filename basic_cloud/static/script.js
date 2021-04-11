@@ -74,6 +74,10 @@ function get_auth_headers(content_type = "application/json") {
     }
 }
 
+function update_curr_dur_status(new_location) {
+    document.getElementById("curr-directory").innerText = "Location: /" + new_location;
+}
+
 async function fetch_token(username, password) {
     const resp = await fetch("/token",
         {
@@ -124,6 +128,7 @@ async function load_roots() {
     delete_children(folders_elem);
     append_path_row(folders_elem, roots.shared, roots.shared, true);
     append_path_row(folders_elem, roots.home, roots.home, true);
+    update_curr_dur_status("");
 }
 
 /**
@@ -150,4 +155,5 @@ async function change_directory(new_directory) {
             append_path_row(files_elem, combined_path, path_content.name, false);
         }
     });
+    update_curr_dur_status(new_directory);
 }
