@@ -6,7 +6,7 @@ from fastapi import APIRouter, Body, Depends, HTTPException, status
 from ..config import get_settings
 from ..database import models
 from ..helpers.auth import get_current_active_user
-from ..helpers.paths import PathContent, relative_dir_contents
+from ..helpers.paths import PathContent, relative_dir_contents, Roots
 
 router = APIRouter()
 
@@ -39,3 +39,11 @@ async def get_directory_contents(
             detail="path must be a directory",
         )
     return relative_dir_contents(root_path)
+
+
+@router.get("/roots", response_model=Roots)
+async def get_roots(curr_user: models.User = Depends(get_current_active_user)):
+    share_path = get_settings().SHARED_PATH.name
+    home_path = str(Path(get_settings().HOMES_PATH.name)\
+        .joinpath(curr_user.username))
+    return Roots(shared=share_path, home=home_path)

@@ -1,3 +1,4 @@
+from os import name
 from pathlib import Path
 from typing import Generator
 
@@ -11,6 +12,11 @@ class PathMeta(BaseModel):
 class PathContent(BaseModel):
     name: str
     meta: PathMeta
+
+
+class Roots(BaseModel):
+    shared: str
+    home: str
 
 
 def relative_dir_contents(root_path: Path):

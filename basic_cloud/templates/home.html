@@ -1,5 +1,15 @@
 {% extends "/shared/base.html" %}
 {% block title %}Home{% endblock %}
+{% block extrahead %}
+<script src="/static/home-onload.js" defer></script>
+{% endblock %}
 {% block main %}
+<h2>Folders</h2>
+<ul id="folders">
 
+</ul>
+<h2>Files</h2>
+<ul id="files">
+
+</ul>
 {% endblock %}
