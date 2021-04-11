@@ -1,6 +1,13 @@
 const TOKEN_KEY = "token";
 
 /**
+ * redirect to the login page
+ */
+function navigate_to_login() {
+    window.location.href = "/login";
+}
+
+/**
  * delete a parents children
  * @param {Element} elem - the parent element
  */
@@ -74,10 +81,19 @@ function get_auth_headers(content_type = "application/json") {
     }
 }
 
-function update_curr_dur_status(new_location) {
+/**
+ * updates the current directory element
+ */
+function update_curr_dir_status(new_location) {
     document.getElementById("curr-directory").innerText = "Location: /" + new_location;
 }
 
+/**
+ * fetches a new token with given credentials
+ * @param {string} username
+ * @param {string} password
+ * @returns the token
+ */
 async function fetch_token(username, password) {
     const resp = await fetch("/token",
         {
@@ -85,7 +101,9 @@ async function fetch_token(username, password) {
             body: `grant_type=password&username=${username}&password=${password}`,
             headers: { "Content-Type": "application/x-www-form-urlencoded" },
         });
-    // TODO add error handling
+    if (resp.status === 401) {
+        throw new InvalidLoginError("invalid login details");
+    }
     const token = await resp.json();
     return token.access_token;
 }
@@ -98,7 +116,7 @@ async function fetch_dir_content(directory) {
             headers: get_auth_headers(),
         }
     );
-    // TODO add error handling
+    if (resp.status === 401) { navigate_to_login(); }
     return await resp.json();
 }
 
@@ -109,16 +127,23 @@ async function fetch_root_dirs() {
             headers: get_auth_headers(),
         }
     );
-    // TODO add error handling
+    if (resp.status === 401) { navigate_to_login(); }
     return await resp.json();
 }
 
-async function do_login() {
-    const username = prompt("enter username");
-    const password = prompt("enter password");
+async function do_login(username, password, rememberme) {
+    // get a token
     token = await fetch_token(username, password);
+    // remove tokens from browser storage
     localStorage.removeItem(TOKEN_KEY);
-    sessionStorage.setItem(TOKEN_KEY, token);
+    sessionStorage.removeItem(TOKEN_KEY);
+    // store the tokens
+    if (rememberme) {
+        localStorage.setItem(TOKEN_KEY, token);
+    }
+    else{
+        sessionStorage.setItem(TOKEN_KEY, token);
+    }
 }
 
 async function load_roots() {
@@ -128,7 +153,7 @@ async function load_roots() {
     delete_children(folders_elem);
     append_path_row(folders_elem, roots.shared, roots.shared, true);
     append_path_row(folders_elem, roots.home, roots.home, true);
-    update_curr_dur_status("");
+    update_curr_dir_status("");
 }
 
 /**
@@ -147,13 +172,35 @@ async function change_directory(new_directory) {
     append_path_row(folders_elem, get_parent_dir(new_directory), "..", true);
 
     dir_content.forEach(path_content => {
-        combined_path = new_directory + "/" + path_content.name;
+        const path_name = path_content.name;
+        combined_path = new_directory + "/" + path_name;
         if (path_content.meta.is_directory) {
-            append_path_row(folders_elem, combined_path, path_content.name, true);
+            append_path_row(folders_elem, combined_path, path_name, true);
         }
         else {
-            append_path_row(files_elem, combined_path, path_content.name, false);
+            append_path_row(files_elem, combined_path, path_name, false);
         }
     });
-    update_curr_dur_status(new_directory);
+    update_curr_dir_status(new_directory.replace("\\", "/"));
+}
+
+/**
+ * handle the login form being submitted
+ */
+function handle_login_form() {
+    const username = document.getElementById("username");
+    const password = document.getElementById("password");
+    const rememberme = document.getElementById("rememberme");
+
+    do_login(username.value, password.value, rememberme.checked)
+        .then(_ => {
+            window.location.href = "/";
+        }).catch(err => {
+            if (err instanceof InvalidLoginError) {
+                password.value = "";
+                alert(err.message);
+                password.focus();
+            }
+            else { throw err;}
+        });
 }
