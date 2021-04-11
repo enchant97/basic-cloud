@@ -1,6 +1,7 @@
 # the web api
 fastapi
 uvicorn
+python-multipart
 # database
 tortoise-orm
 # password & tokens
