@@ -3,10 +3,11 @@ from tortoise.contrib.fastapi import register_tortoise
 
 from .config import get_settings
 from .database import models
+from .helpers.constants import STATIC
 from .router import auth, folder, html, users
 
 app = FastAPI()
-app.mount("/static", app, name="static")
+app.mount("/static", STATIC, name="static")
 
 app.include_router(html.router, tags=["html"])
 app.include_router(auth.router)
