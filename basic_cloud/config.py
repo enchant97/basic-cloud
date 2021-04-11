@@ -5,7 +5,8 @@ from pydantic import BaseSettings
 
 
 class Settings(BaseSettings):
-    DATA_PATH: Path = Path("data")
+    SHARED_PATH: Path = Path("data/shared")
+    HOMES_PATH: Path = Path("data/homes")
     DB_URI: str = "sqlite://app_data.db"
     SECRET_KEY: str
     SIGNUPS_ALLOWED: bool = True

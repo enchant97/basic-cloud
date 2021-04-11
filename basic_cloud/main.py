@@ -3,7 +3,7 @@ from tortoise.contrib.fastapi import register_tortoise
 
 from .config import get_settings
 from .database import models
-from .router import html, auth, users
+from .router import auth, folder, html, users
 
 app = FastAPI()
 app.mount("/static", app, name="static")
@@ -11,6 +11,7 @@ app.mount("/static", app, name="static")
 app.include_router(html.router, tags=["html"])
 app.include_router(auth.router)
 app.include_router(users.router, prefix="/api/users")
+app.include_router(folder.router, prefix="/api/directory")
 
 
 @app.on_event("startup")
