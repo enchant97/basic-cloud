@@ -1,6 +1,4 @@
-from os import name
 from pathlib import Path
-from typing import Generator
 
 from pydantic import BaseModel
 
@@ -24,3 +22,7 @@ def relative_dir_contents(root_path: Path):
         is_dir = path.is_dir()
         path = path.relative_to(root_path)
         yield PathContent(name=str(path), meta=PathMeta(is_directory=is_dir))
+
+
+def create_user_home_dir(username: str, homes_path: Path):
+    homes_path.joinpath(username).mkdir(exist_ok=True)

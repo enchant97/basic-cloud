@@ -7,7 +7,7 @@ from ..config import get_settings
 from ..database import crud, schema
 from ..helpers.auth import (authenticate_user, create_access_token,
                             get_password_hash)
-
+from ..helpers.paths import create_user_home_dir
 router = APIRouter()
 
 
@@ -38,4 +38,5 @@ async def create_account(
             detail="signups are disabled",
         )
     pass_hash = get_password_hash(new_user.password)
+    create_user_home_dir(new_user.username, get_settings().HOMES_PATH)
     return await crud.create_user(new_user.username, pass_hash)
