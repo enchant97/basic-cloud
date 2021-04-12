@@ -1,0 +1,2 @@
+class PathNotExists(ValueError):
+    pass

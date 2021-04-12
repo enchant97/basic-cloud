@@ -6,35 +6,30 @@ from fastapi import APIRouter, Body, Depends, HTTPException, status
 from ..config import get_settings
 from ..database import models
 from ..helpers.auth import get_current_active_user
-from ..helpers.paths import PathContent, relative_dir_contents, Roots
+from ..helpers.exceptions import PathNotExists
+from ..helpers.paths import (PathContent, Roots, create_root_path,
+                             relative_dir_contents)
 
 router = APIRouter()
 
 
 @router.post("/contents", response_model=List[PathContent])
 async def get_directory_contents(
-        directory: str = Body(..., embed=True),
+        directory: Path = Body(..., embed=True),
         curr_user: models.User = Depends(get_current_active_user)):
-    root_path = Path(directory)
-    if root_path.parts[0] != "shared"\
-            and root_path.parts[0:2] != ("homes", curr_user.username):
+    root_path = directory
+    try:
+        root_path = create_root_path(
+            root_path,
+            get_settings().HOMES_PATH,
+            get_settings().SHARED_PATH,
+            curr_user.username,
+        )
+    except PathNotExists:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="unknown root directory",
         )
-    parts = root_path.parts[1:]
-    if root_path.parts[0] == "shared":
-        # must be the shared directory
-        if parts:
-            root_path = get_settings().SHARED_PATH.joinpath(*parts)
-        else:
-            root_path = get_settings().SHARED_PATH
-    else:
-        # must be a user home directory
-        if parts:
-            root_path = get_settings().HOMES_PATH.joinpath(*parts)
-        else:
-            root_path = get_settings().HOMES_PATH
 
     if not root_path.exists():
         raise HTTPException(
