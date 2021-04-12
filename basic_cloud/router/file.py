@@ -2,7 +2,10 @@ from datetime import datetime, timedelta
 from pathlib import Path
 from uuid import UUID, uuid4
 
-from fastapi import APIRouter, Body, Depends, HTTPException, status
+import aiofiles
+from fastapi import (APIRouter, Body, Depends, Form, HTTPException, UploadFile,
+                     status)
+from fastapi.param_functions import File, Form
 from fastapi.responses import FileResponse
 
 from ..config import get_settings
@@ -40,7 +43,7 @@ async def create_download_token(
 
     if not root_path.is_file():
         raise HTTPException(
-            status_code=status.HTTP_401_BAD_REQUEST,
+            status_code=status.HTTP_400_BAD_REQUEST,
             detail="cannot be a directory",
         )
 
@@ -75,3 +78,44 @@ async def download_file_by_token(token: UUID):
 
     file_path = token_contents["path"]
     return FileResponse(file_path, filename=file_path.name)
+
+
+@router.post("/upload/overwrite")
+async def upload_file_overwrite(
+        file: UploadFile = File(...),
+        directory: Path = Form(...),
+        curr_user: models.User = Depends(get_current_active_user)):
+    root_path = directory
+    try:
+        root_path = create_root_path(
+            root_path,
+            get_settings().HOMES_PATH,
+            get_settings().SHARED_PATH,
+            curr_user.username,
+        )
+    except PathNotExists:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="unknown root directory",
+        )
+
+    if not root_path.exists():
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="directory/file must exist",
+        )
+
+    if not root_path.is_dir():
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="cannot be a directory",
+        )
+
+    root_path = root_path.joinpath(file.filename)
+
+    # write the file to system
+    async with aiofiles.open(root_path, "wb") as fo:
+        await fo.write(await file.read())
+        await file.close()
+
+    return {"path": directory.joinpath(file.filename)}
