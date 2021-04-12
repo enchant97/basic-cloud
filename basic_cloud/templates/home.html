@@ -1,16 +1,16 @@
 {% extends "/shared/base.html" %}
-{% block title %}Home{% endblock %}
+{% block title %}The Cloud{% endblock %}
 {% block extrahead %}
 <script src="/static/home-onload.js" defer></script>
+{% endblock %}
+{% block nav %}
+<button id="load-shares-bnt" onclick="go_to_shares();" disabled>Shares</button>
+<button onclick="do_logout();">Logout</button>
 {% endblock %}
 {% block main %}
 <h3 id="curr-directory"></h3>
 <h2>Folders</h2>
-<ul id="folders">
-
-</ul>
+<ul id="folders"></ul>
 <h2>Files</h2>
-<ul id="files">
-
-</ul>
+<ul id="files"></ul>
 {% endblock %}

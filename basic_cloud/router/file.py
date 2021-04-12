@@ -20,11 +20,11 @@ download_tokens = dict()
 
 @router.post("/download/new-token")
 async def create_download_token(
-        root_path: Path = Body(..., embed=True),
+        file_path: Path = Body(..., embed=True),
         curr_user: models.User = Depends(get_current_active_user)):
     try:
-        root_path = create_root_path(
-            root_path,
+        file_path = create_root_path(
+            file_path,
             get_settings().HOMES_PATH,
             get_settings().SHARED_PATH,
             curr_user.username,
@@ -35,13 +35,13 @@ async def create_download_token(
             detail="unknown root directory",
         )
 
-    if not root_path.exists():
+    if not file_path.exists():
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="directory/file must exist",
         )
 
-    if not root_path.is_file():
+    if not file_path.is_file():
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="cannot be a directory",
@@ -56,7 +56,7 @@ async def create_download_token(
 
     token = uuid4()
     expires = dt_now + timedelta(minutes=4)
-    download_tokens[token] = {"path": root_path, "expires": expires}
+    download_tokens[token] = {"path": file_path, "expires": expires}
 
     return {"token": str(token)}
 

@@ -1,3 +1,5 @@
+"use strict";
+
 const TOKEN_KEY = "token";
 
 /**
@@ -32,20 +34,28 @@ function append_path_row(parent, path, name, is_dir) {
         elem.classList.add("directory");
         if (path !== null) {
             bnt.addEventListener("click", _ => {
+                document.getElementById("load-shares-bnt").removeAttribute("disabled");
                 change_directory(path);
             });
         }
         else {
             bnt.addEventListener("click", _ => {
+                document.getElementById("load-shares-bnt").setAttribute("disabled", true);
                 load_roots();
             });
         }
     }
     else {
+        bnt.addEventListener("click", _ => { start_download_file(path) });
         elem.classList.add("file");
     }
     elem.append(bnt);
     parent.append(elem);
+}
+
+function go_to_shares() {
+    document.getElementById("load-shares-bnt").setAttribute("disabled", true);
+    load_roots();
 }
 
 /**
@@ -74,6 +84,20 @@ function get_stored_token() {
     return token;
 }
 
+/**
+ * remove any stored token in
+ * either session or local storage
+ */
+function remove_token() {
+    localStorage.removeItem(TOKEN_KEY);
+    sessionStorage.removeItem(TOKEN_KEY);
+}
+
+/**
+ * adds a auth header with the token
+ * @param {string} content_type - the content type
+ * @returns html header for use with fetch
+ */
 function get_auth_headers(content_type = "application/json") {
     return {
         "Authorization": `Bearer ${get_stored_token()}`,
@@ -108,6 +132,11 @@ async function fetch_token(username, password) {
     return token.access_token;
 }
 
+/**
+ * get the files and directories
+ * @param {string} directory - the directory to load
+ * @returns the files and directories
+ */
 async function fetch_dir_content(directory) {
     const resp = await fetch("/api/directory/contents",
         {
@@ -120,6 +149,10 @@ async function fetch_dir_content(directory) {
     return await resp.json();
 }
 
+/**
+ * get the root directories
+ * @returns the root directories
+ */
 async function fetch_root_dirs() {
     const resp = await fetch("/api/directory/roots",
         {
@@ -131,12 +164,50 @@ async function fetch_root_dirs() {
     return await resp.json();
 }
 
+/**
+ * request a download token
+ * @param {string} file_path - path of file to download
+ * @returns download token
+ */
+async function fetch_download_token(file_path) {
+    const resp = await fetch("/api/file/download/new-token",
+    {
+        method: "POST",
+        body: JSON.stringify({ file_path: file_path}),
+        headers: get_auth_headers(),
+    });
+    if (resp.status === 401) { navigate_to_login(); }
+    if (!resp.ok) { throw new Error(resp.status) }
+    const json_data = await resp.json();
+    return json_data.token;
+}
+
+/**
+ * start downloading a file
+ * @param {string} file_path - path of file to download
+ */
+function start_download_file(file_path) {
+    fetch_download_token(file_path).then(token => {
+        const a_elem = document.createElement("a");
+        a_elem.href = "/api/file/download/by-token/" + token;
+        a_elem.setAttribute("download", true);
+        a_elem.click();
+        a_elem.remove();
+    });
+}
+
+/**
+ * handle the login for the api,
+ * requesting and storing the token
+ * @param {string} username - the user username
+ * @param {string} password - the user password
+ * @param {boolean} rememberme - whether to store the token
+ */
 async function do_login(username, password, rememberme) {
     // get a token
-    token = await fetch_token(username, password);
+    const token = await fetch_token(username, password);
     // remove tokens from browser storage
-    localStorage.removeItem(TOKEN_KEY);
-    sessionStorage.removeItem(TOKEN_KEY);
+    remove_token();
     // store the tokens
     if (rememberme) {
         localStorage.setItem(TOKEN_KEY, token);
@@ -146,6 +217,17 @@ async function do_login(username, password, rememberme) {
     }
 }
 
+/**
+ * log the user out and redirect to login page
+ */
+function do_logout() {
+    remove_token();
+    navigate_to_login();
+}
+
+/**
+ * load and display the root directories
+ */
 async function load_roots() {
     const roots = await fetch_root_dirs();
     const folders_elem = document.getElementById("folders");
@@ -173,7 +255,7 @@ async function change_directory(new_directory) {
 
     dir_content.forEach(path_content => {
         const path_name = path_content.name;
-        combined_path = new_directory + "/" + path_name;
+        const combined_path = new_directory + "/" + path_name;
         if (path_content.meta.is_directory) {
             append_path_row(folders_elem, combined_path, path_name, true);
         }
