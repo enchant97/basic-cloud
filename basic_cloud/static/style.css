@@ -1,0 +1,122 @@
+:root {
+    --font-dark: black;
+    --font-light: #f0f0f0;
+    --font-placeholder: #505a69;
+    --bg-bnt: #adadad;
+    --bg-bnt-disabled-fg: grey;
+    --bg-body: #9299a5;
+    --bg-body2: #8e959e;
+    --bg-body3: #878d96;
+    --border-col: #777777;
+    --border-radius: 10px;
+    --font-family-title: 'Roboto', sans-serif;
+    --font-family-main: 'Open Sans', sans-serif;
+}
+
+input,
+label,
+button,
+a,
+footer {
+    font-family: var(--font-family-main);
+    color: var(--font-dark);
+    font-size: 0.9em;
+}
+
+body::-webkit-scrollbar {
+    width: 6px;
+    background-color: var(--bg-body);
+}
+
+body::-webkit-scrollbar-thumb {
+    background-color: #4b4b4b;
+}
+
+body::-webkit-scrollbar-thumb:hover {
+    background-color: #353535;
+}
+
+body::-webkit-scrollbar-thumb:active {
+    background-color: black;
+}
+
+h1,
+h2 {
+    font-family: var(--font-family-title);
+    text-align: center;
+}
+
+h1 {
+    font-size: 2em;
+}
+
+body {
+    background-color: var(--bg-body);
+}
+
+header nav {
+    display: flex;
+    gap: 4px;
+    background-color: var(--bg-body2);
+    padding: 4px 0px;
+    border-radius: var(--border-radius);
+}
+
+header nav button:last-child {
+    margin-left: auto;
+}
+
+main form {
+    display: flex;
+    padding: 10px;
+    flex-direction: column;
+    width: fit-content;
+    margin: auto;
+    background-color: var(--bg-body2);
+    border-radius: var(--border-radius);
+    gap: 4px;
+}
+
+input {
+    padding: 2px 6px;
+    background-color: var(--bg-body3);
+    color: var(--font-light);
+    border: 1.5px solid var(--border-col);
+    border-radius: var(--border-radius);
+}
+
+input::placeholder {
+    color: var(--font-placeholder);
+}
+
+button,
+.button {
+    background-color: var(--bg-bnt);
+    border: none;
+    padding: 6px;
+    text-decoration: none;
+    text-align: center;
+    border-radius: var(--border-radius);
+}
+
+button:hover,
+.button:hover {
+    transition-duration: 400ms;
+    cursor: pointer;
+    background-color: black;
+    color: white;
+}
+
+button:disabled,
+.button:disabled {
+    background-color: var(--bg-bnt);
+    color: var(--bg-bnt-disabled-fg);
+    cursor: default;
+}
+
+footer {
+    text-align: center;
+    margin-top: 100px;
+    border-top-style: solid;
+    padding-top: 10px;
+}
