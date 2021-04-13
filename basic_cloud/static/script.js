@@ -78,7 +78,7 @@ function get_parent_dir(curr_dir) {
  */
 function get_stored_token() {
     var token = localStorage.getItem(TOKEN_KEY);
-    if (token === null){
+    if (token === null) {
         return sessionStorage.getItem(TOKEN_KEY);
     }
     return token;
@@ -134,6 +134,16 @@ async function fetch_token(username, password) {
     return token.access_token;
 }
 
+async function fetch_create_account(username, password) {
+    const resp = await fetch("/api/user",
+        {
+            method: "POST",
+            body: JSON.stringify({ username, password }),
+        });
+    if (!resp.ok) { throw new Error(resp.status) }
+    return await resp.json();
+}
+
 /**
  * get the files and directories
  * @param {string} directory - the directory to load
@@ -143,7 +153,7 @@ async function fetch_dir_content(directory) {
     const resp = await fetch("/api/directory/contents",
         {
             method: "POST",
-            body: JSON.stringify({directory: directory}),
+            body: JSON.stringify({ directory: directory }),
             headers: get_auth_headers(),
         }
     );
@@ -173,11 +183,11 @@ async function fetch_root_dirs() {
  */
 async function fetch_download_token(file_path) {
     const resp = await fetch("/api/file/download/new-token",
-    {
-        method: "POST",
-        body: JSON.stringify({ file_path: file_path}),
-        headers: get_auth_headers(),
-    });
+        {
+            method: "POST",
+            body: JSON.stringify({ file_path: file_path }),
+            headers: get_auth_headers(),
+        });
     if (resp.status === 401) { navigate_to_login(); }
     if (!resp.ok) { throw new Error(resp.status) }
     const json_data = await resp.json();
@@ -264,7 +274,7 @@ async function do_login(username, password, rememberme) {
     if (rememberme) {
         localStorage.setItem(TOKEN_KEY, token);
     }
-    else{
+    else {
         sessionStorage.setItem(TOKEN_KEY, token);
     }
 }
@@ -339,6 +349,22 @@ function handle_login_form() {
                 alert(err.message);
                 password.focus();
             }
-            else { throw err;}
+            else { throw err; }
         });
+}
+
+function handle_create_account_form() {
+    const username = document.getElementById("username");
+    const password = document.getElementById("password");
+    const password_conf = document.getElementById("password-conf");
+    if (password.value !== password_conf.value) {
+        alert("passwords do not match");
+        password_conf.value = "";
+        password_conf.focus();
+    }
+    else {
+        fetch_create_account(username.value, password.value)
+            .then(_ => { navigate_to_login() })
+            .catch(err => alert(err.message));
+    }
 }

@@ -1,5 +1,13 @@
 {% extends "/shared/base.html" %}
 {% block title %}Create Account{% endblock %}
 {% block main %}
-
+<form action="" onsubmit="return false;">
+    <label for="username">Username</label>
+    <input type="text" id="username" required placeholder="username...">
+    <label for="password">Password</label>
+    <input type="password" id="password" required placeholder="password...">
+    <label for="password-conf">Password Confirm</label>
+    <input type="password" id="password-conf" required placeholder="password conf...">
+    <button type="submit" onclick="handle_create_account_form()">Create Account</button>
+</form>
 {% endblock %}

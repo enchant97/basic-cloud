@@ -4,10 +4,9 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
 
 from ..config import get_settings
-from ..database import crud, schema
-from ..helpers.auth import (authenticate_user, create_access_token,
-                            get_password_hash)
-from ..helpers.paths import create_user_home_dir
+from ..database import schema
+from ..helpers.auth import authenticate_user, create_access_token
+
 router = APIRouter()
 
 
@@ -27,16 +26,3 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends()):
         expires_delta=token_expires,
     )
     return {"access_token": access_token, "token_type": "bearer"}
-
-
-@router.post("/create-account", response_model=schema.User)
-async def create_account(
-        new_user: schema.UserCreate):
-    if not get_settings().SIGNUPS_ALLOWED:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="signups are disabled",
-        )
-    pass_hash = get_password_hash(new_user.password)
-    create_user_home_dir(new_user.username, get_settings().HOMES_PATH)
-    return await crud.create_user(new_user.username, pass_hash)
