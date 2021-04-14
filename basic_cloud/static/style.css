@@ -13,6 +13,19 @@
     --font-family-main: 'Open Sans', sans-serif;
 }
 
+@media (prefers-color-scheme: dark) {
+    :root {
+        --font-light: #bcbcbc;
+        --font-dark: var(--font-light);
+        --bg-bnt: #003d4b;
+        --bg-bnt-disabled-fg: #004a5a;
+        --bg-body: #002b36;
+        --bg-body2: #073540;
+        --bg-body3: #083b47;
+        --border-col: #005163;
+    }
+}
+
 input,
 label,
 button,
@@ -41,9 +54,11 @@ body::-webkit-scrollbar-thumb:active {
 }
 
 h1,
-h2 {
+h2,
+h3 {
     font-family: var(--font-family-title);
     text-align: center;
+    color: var(--font-dark);
 }
 
 h1 {
@@ -118,6 +133,7 @@ footer {
     text-align: center;
     margin-top: 100px;
     border-top-style: solid;
+    border-color: var(--border-col);
     padding-top: 10px;
 }
 
@@ -128,5 +144,9 @@ main div#files-and-dirs {
 }
 
 main div#files-and-dirs button {
+    text-align: left;
+}
+
+#curr-directory {
     text-align: left;
 }
