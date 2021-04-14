@@ -120,3 +120,13 @@ footer {
     border-top-style: solid;
     padding-top: 10px;
 }
+
+main div#files-and-dirs {
+    display: grid;
+    grid-template-columns: 40px auto max-content;
+    background-color: var(--bg-body2);
+}
+
+main div#files-and-dirs button {
+    text-align: left;
+}

@@ -20,6 +20,62 @@ function delete_children(parent) {
 }
 
 /**
+ * append file row elements
+ * @param {Element} parent - the parent to append to
+ * @param {string} path - the file path
+ * @param {string} name - the name to display
+ */
+function create_file_row_element(parent, path, name) {
+    const icon_elem = document.createElement("img");
+    const name_elem = document.createElement("button");
+    const download_bnt_elem = document.createElement("button");
+
+    name_elem.innerText = name;
+    download_bnt_elem.innerText = "Download";
+    download_bnt_elem.addEventListener("click", _ => { start_download_file(path) });
+
+    parent.append(icon_elem);
+    parent.append(name_elem);
+    parent.append(download_bnt_elem);
+}
+
+/**
+ * append directory row elements
+ * @param {Element} parent - the parent to append to
+ * @param {string} path - the directory path
+ * @param {string} name - the name to display
+ */
+function create_directory_row_element(parent, path, name) {
+    const icon_elem = document.createElement("img");
+    const name_elem = document.createElement("button");
+    const download_bnt_elem = document.createElement("button");
+
+    name_elem.innerText = name;
+    if (path !== null) {
+        name_elem.addEventListener("click", _ => {
+            document.getElementById("load-shares-bnt").removeAttribute("disabled");
+            change_directory(path);
+        });
+    }
+    else {
+        name_elem.addEventListener("click", _ => {
+            document.getElementById("load-shares-bnt").setAttribute("disabled", true);
+            load_roots();
+        });
+    }
+    download_bnt_elem.innerText = "Download";
+    download_bnt_elem.setAttribute("disabled", true);
+
+    if (path === null) {
+        download_bnt_elem.innerText="";
+    }
+
+    parent.append(icon_elem);
+    parent.append(name_elem);
+    parent.append(download_bnt_elem);
+}
+
+/**
  * appends new path navigators to the parent
  * @param {Element} parent - the parent element
  * @param {string} path - the path
@@ -27,30 +83,12 @@ function delete_children(parent) {
  * @param {boolean} is_dir - whether path is a directory
  */
 function append_path_row(parent, path, name, is_dir) {
-    const elem = document.createElement("li");
-    const bnt = document.createElement("button");
-    bnt.innerText = name;
     if (is_dir) {
-        elem.classList.add("directory");
-        if (path !== null) {
-            bnt.addEventListener("click", _ => {
-                document.getElementById("load-shares-bnt").removeAttribute("disabled");
-                change_directory(path);
-            });
-        }
-        else {
-            bnt.addEventListener("click", _ => {
-                document.getElementById("load-shares-bnt").setAttribute("disabled", true);
-                load_roots();
-            });
-        }
+        create_directory_row_element(parent, path, name);
     }
     else {
-        bnt.addEventListener("click", _ => { start_download_file(path) });
-        elem.classList.add("file");
+        create_file_row_element(parent, path, name);
     }
-    elem.append(bnt);
-    parent.append(elem);
 }
 
 function go_to_shares() {
@@ -212,6 +250,10 @@ async function fetch_upload_file(form_data) {
     return json_data;
 }
 
+async function fetch_create_dir(name) {
+    // TODO
+}
+
 /**
  * start downloading a file
  * @param {string} file_path - path of file to download
@@ -258,6 +300,16 @@ function upload_file() {
     }
 }
 
+function create_dir() {
+    if (curr_dir) {
+        // TODO
+        alert("currently not implemented");
+    }
+    else {
+        alert("cannot create directory here...");
+    }
+}
+
 /**
  * handle the login for the api,
  * requesting and storing the token
@@ -292,14 +344,14 @@ function do_logout() {
  */
 async function load_roots() {
     const roots = await fetch_root_dirs();
-    const folders_elem = document.getElementById("folders");
-    delete_children(document.getElementById("files"));
-    delete_children(folders_elem);
-    append_path_row(folders_elem, roots.shared, roots.shared, true);
-    append_path_row(folders_elem, roots.home, roots.home, true);
+    const files_and_dirs = document.getElementById("files-and-dirs");
+    delete_children(files_and_dirs);
+    append_path_row(files_and_dirs, roots.shared, roots.shared, true);
+    append_path_row(files_and_dirs, roots.home, roots.home, true);
     update_curr_dir_status("");
     curr_dir = null;
     document.getElementById("upload-file-bnt").setAttribute("disabled", true);
+    document.getElementById("create-dir-bnt").setAttribute("disabled", true);
 }
 
 /**
@@ -309,26 +361,25 @@ async function load_roots() {
 async function change_directory(new_directory) {
     const dir_content = await fetch_dir_content(new_directory);
 
-    const folders_elem = document.getElementById("folders");
-    const files_elem = document.getElementById("files");
+    const files_and_dirs = document.getElementById("files-and-dirs");
 
-    delete_children(folders_elem);
-    delete_children(files_elem);
+    delete_children(files_and_dirs);
 
-    append_path_row(folders_elem, get_parent_dir(new_directory), "..", true);
+    append_path_row(files_and_dirs, get_parent_dir(new_directory), "..", true);
 
     dir_content.forEach(path_content => {
         const path_name = path_content.name;
         const combined_path = new_directory + "/" + path_name;
         if (path_content.meta.is_directory) {
-            append_path_row(folders_elem, combined_path, path_name, true);
+            append_path_row(files_and_dirs, combined_path, path_name, true);
         }
         else {
-            append_path_row(files_elem, combined_path, path_name, false);
+            append_path_row(files_and_dirs, combined_path, path_name, false);
         }
     });
     curr_dir = new_directory;
     document.getElementById("upload-file-bnt").removeAttribute("disabled");
+    document.getElementById("create-dir-bnt").removeAttribute("disabled");
     update_curr_dir_status(new_directory.replace("\\", "/"));
 }
 
