@@ -2,6 +2,7 @@ from pathlib import Path
 from typing import List
 
 from fastapi import APIRouter, Body, Depends, HTTPException, status
+from fastapi.responses import PlainTextResponse
 
 from ..config import get_settings
 from ..database import models
@@ -50,3 +51,26 @@ async def get_roots(curr_user: models.User = Depends(get_current_active_user)):
     home_path = str(Path(get_settings().HOMES_PATH.name)\
         .joinpath(curr_user.username))
     return Roots(shared=share_path, home=home_path)
+
+
+@router.post("/mkdir", response_class=PlainTextResponse)
+async def create_directory(
+        directory: Path = Body(..., embed=True),
+        name: Path = Body(..., embed=True),
+        curr_user: models.User = Depends(get_current_active_user)):
+    directory = directory.joinpath(name)
+    try:
+        full_path = create_root_path(
+            directory,
+            get_settings().HOMES_PATH,
+            get_settings().SHARED_PATH,
+            curr_user.username,
+        )
+    except PathNotExists:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="unknown root directory",
+        )
+
+    full_path.mkdir(parents=True, exist_ok=True)
+    return directory

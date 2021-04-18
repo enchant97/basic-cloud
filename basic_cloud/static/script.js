@@ -67,7 +67,7 @@ function create_directory_row_element(parent, path, name) {
     download_bnt_elem.setAttribute("disabled", true);
 
     if (path === null) {
-        download_bnt_elem.innerText="";
+        download_bnt_elem.innerText = "";
     }
 
     parent.append(icon_elem);
@@ -250,8 +250,22 @@ async function fetch_upload_file(form_data) {
     return json_data;
 }
 
-async function fetch_create_dir(name) {
-    // TODO
+/**
+ * create a new directory
+ * @param {string} directory - directory path
+ * @param {string} name - the name of the directory to create
+ * @returns the directory path created
+ */
+async function fetch_mkdir(directory, name) {
+    const resp = await fetch("/api/directory/mkdir",
+        {
+            method: "POST",
+            body: JSON.stringify({ directory, name }),
+            headers: get_auth_headers(),
+        });
+    if (resp.status === 401) { navigate_to_login(); }
+    if (!resp.ok) { throw new Error(resp.status) }
+    return await resp.text();
 }
 
 /**
@@ -300,10 +314,25 @@ function upload_file() {
     }
 }
 
+/**
+ * create a new directory
+ */
 function create_dir() {
     if (curr_dir) {
-        // TODO
-        alert("currently not implemented");
+        const name = prompt("directory name");
+        if (name) {
+            fetch_mkdir(curr_dir, name)
+                .then(directory => {
+                    alert("created directory, " + directory);
+                    change_directory(curr_dir);
+                })
+                .catch(err => {
+                    alert("failed to create directory")
+                });
+        }
+        else {
+            alert("invalid name given");
+        }
     }
     else {
         alert("cannot create directory here...");
