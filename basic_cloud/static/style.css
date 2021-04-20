@@ -139,7 +139,7 @@ footer {
 
 main div#files-and-dirs {
     display: grid;
-    grid-template-columns: 40px auto max-content;
+    grid-template-columns: 40px auto max-content max-content;
     background-color: var(--bg-body2);
 }
 

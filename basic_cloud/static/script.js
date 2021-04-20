@@ -20,23 +20,92 @@ function delete_children(parent) {
 }
 
 /**
+ * create file and directory row elements
+ * and control their function
+ */
+class FileDirRow{
+    constructor(path, name) {
+        this.name = name;
+        this.path = path;
+
+        this.create_elements();
+        this.set_names();
+        this.disable_edit();// TODO Remove when delete is implemented
+    }
+    create_elements() {
+        this.icon_elem = document.createElement("img");
+        this.name_elem = document.createElement("button");
+        this.delete_bnt_elem = document.createElement("button");
+        this.download_bnt_elem = document.createElement("button");
+    }
+    set_names() {
+        this.name_elem.innerText = this.name;
+        this.delete_bnt_elem.innerText = "×";
+        this.download_bnt_elem.innerText = "Download";
+    }
+    disable_edit() {
+        this.delete_bnt_elem.setAttribute("disabled", true);
+    }
+    disable_download() {
+        this.download_bnt_elem.setAttribute("disabled", true);
+    }
+    add_dir_root_navigate() {
+        this.name_elem.addEventListener("click", _ => {
+            document.getElementById("load-shares-bnt").setAttribute("disabled", true);
+            load_roots();
+        });
+    }
+    add_dir_dir_navigate() {
+        this.name_elem.addEventListener("click", _ => {
+            document.getElementById("load-shares-bnt").removeAttribute("disabled");
+            change_directory(this.path);
+        });
+    }
+    add_dir_navigate() {
+        if (this.path !== null) {
+            this.add_dir_dir_navigate();
+        }
+        else {
+            this.add_dir_root_navigate();
+        }
+    }
+    make_file_row() {
+        this.download_bnt_elem.addEventListener("click", _ => { start_download_file(this.path) });
+    }
+    make_up_dir_row() {
+        this.disable_edit();
+        this.disable_download();
+        this.add_dir_navigate();
+
+    }
+    make_dir_row(edit_allowed = true) {
+        if (!edit_allowed) { this.disable_edit(); }
+        this.disable_download();// TODO remove this when download dir is implemented
+        this.add_dir_navigate();
+    }
+    make_dir_root_row() {
+        this.disable_edit();
+        this.disable_download();// TODO remove this when download dir is implemented
+        this.add_dir_dir_navigate();
+    }
+    append_elements(parent) {
+        parent.append(this.icon_elem);
+        parent.append(this.name_elem);
+        parent.append(this.delete_bnt_elem);
+        parent.append(this.download_bnt_elem);
+    }
+}
+
+/**
  * append file row elements
  * @param {Element} parent - the parent to append to
  * @param {string} path - the file path
  * @param {string} name - the name to display
  */
-function create_file_row_element(parent, path, name) {
-    const icon_elem = document.createElement("img");
-    const name_elem = document.createElement("button");
-    const download_bnt_elem = document.createElement("button");
-
-    name_elem.innerText = name;
-    download_bnt_elem.innerText = "Download";
-    download_bnt_elem.addEventListener("click", _ => { start_download_file(path) });
-
-    parent.append(icon_elem);
-    parent.append(name_elem);
-    parent.append(download_bnt_elem);
+function append_file_row_element(parent, path, name) {
+    const fdr = new FileDirRow(path, name);
+    fdr.make_file_row();
+    fdr.append_elements(parent);
 }
 
 /**
@@ -45,50 +114,34 @@ function create_file_row_element(parent, path, name) {
  * @param {string} path - the directory path
  * @param {string} name - the name to display
  */
-function create_directory_row_element(parent, path, name) {
-    const icon_elem = document.createElement("img");
-    const name_elem = document.createElement("button");
-    const download_bnt_elem = document.createElement("button");
-
-    name_elem.innerText = name;
-    if (path !== null) {
-        name_elem.addEventListener("click", _ => {
-            document.getElementById("load-shares-bnt").removeAttribute("disabled");
-            change_directory(path);
-        });
-    }
-    else {
-        name_elem.addEventListener("click", _ => {
-            document.getElementById("load-shares-bnt").setAttribute("disabled", true);
-            load_roots();
-        });
-    }
-    download_bnt_elem.innerText = "Download";
-    download_bnt_elem.setAttribute("disabled", true);
-
-    if (path === null) {
-        download_bnt_elem.innerText = "";
-    }
-
-    parent.append(icon_elem);
-    parent.append(name_elem);
-    parent.append(download_bnt_elem);
+function append_directory_row_element(parent, path, name) {
+    const fdr = new FileDirRow(path, name);
+    fdr.make_dir_row();
+    fdr.append_elements(parent);
 }
 
 /**
- * appends new path navigators to the parent
- * @param {Element} parent - the parent element
- * @param {string} path - the path
+ * append directory up row elements
+ * @param {Element} parent - the parent to append to
+ * @param {string} path - the directory path
  * @param {string} name - the name to display
- * @param {boolean} is_dir - whether path is a directory
  */
-function append_path_row(parent, path, name, is_dir) {
-    if (is_dir) {
-        create_directory_row_element(parent, path, name);
-    }
-    else {
-        create_file_row_element(parent, path, name);
-    }
+function append_directory_up_row_element(parent, path, name) {
+    const fdr = new FileDirRow(path, name);
+    fdr.make_up_dir_row();
+    fdr.append_elements(parent);
+}
+
+/**
+ * append root directory row elements
+ * @param {Element} parent - the parent to append to
+ * @param {string} path - the directory path
+ * @param {string} name - the name to display
+ */
+function append_directory_root_row_element(parent, path, name) {
+    const fdr = new FileDirRow(path, name);
+    fdr.make_dir_root_row();
+    fdr.append_elements(parent);
 }
 
 function go_to_shares() {
@@ -375,8 +428,8 @@ async function load_roots() {
     const roots = await fetch_root_dirs();
     const files_and_dirs = document.getElementById("files-and-dirs");
     delete_children(files_and_dirs);
-    append_path_row(files_and_dirs, roots.shared, roots.shared, true);
-    append_path_row(files_and_dirs, roots.home, roots.home, true);
+    append_directory_root_row_element(files_and_dirs, roots.shared, roots.shared);
+    append_directory_root_row_element(files_and_dirs, roots.home, roots.home);
     update_curr_dir_status("");
     curr_dir = null;
     document.getElementById("upload-file-bnt").setAttribute("disabled", true);
@@ -394,16 +447,16 @@ async function change_directory(new_directory) {
 
     delete_children(files_and_dirs);
 
-    append_path_row(files_and_dirs, get_parent_dir(new_directory), "..", true);
+    append_directory_up_row_element(files_and_dirs, get_parent_dir(new_directory), "..");
 
     dir_content.forEach(path_content => {
         const path_name = path_content.name;
         const combined_path = new_directory + "/" + path_name;
         if (path_content.meta.is_directory) {
-            append_path_row(files_and_dirs, combined_path, path_name, true);
+            append_directory_row_element(files_and_dirs, combined_path, path_name);
         }
         else {
-            append_path_row(files_and_dirs, combined_path, path_name, false);
+            append_file_row_element(files_and_dirs, combined_path, path_name);
         }
     });
     curr_dir = new_directory;
