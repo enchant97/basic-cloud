@@ -1,14 +1,15 @@
+import base64
 from pathlib import Path
 from typing import List
 
 from fastapi import APIRouter, Body, Depends, HTTPException, status
-from fastapi.responses import PlainTextResponse
+from fastapi.responses import PlainTextResponse, StreamingResponse
 
 from ..config import get_settings
 from ..database import models
 from ..helpers.auth import get_current_active_user
 from ..helpers.exceptions import PathNotExists
-from ..helpers.paths import (PathContent, Roots, create_root_path,
+from ..helpers.paths import (PathContent, Roots, create_root_path, create_zip,
                              relative_dir_contents)
 
 router = APIRouter()
@@ -74,3 +75,38 @@ async def create_directory(
 
     full_path.mkdir(parents=True, exist_ok=True)
     return directory
+
+
+@router.get("/download/{directory}", response_class=StreamingResponse)
+async def download_zip(
+        directory: str,
+        curr_user: models.User = Depends(get_current_active_user)):
+    directory = base64.b64decode(directory).decode()
+    directory = Path(directory)
+
+    try:
+        directory = create_root_path(
+            directory,
+            get_settings().HOMES_PATH,
+            get_settings().SHARED_PATH,
+            curr_user.username,
+        )
+    except PathNotExists:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="unknown root directory",
+        )
+
+    if not directory.exists():
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="directory must exist",
+        )
+    if not directory.is_dir():
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="path must be a directory",
+        )
+
+    zip_obj = create_zip(directory)
+    return StreamingResponse(zip_obj, media_type="application/zip")

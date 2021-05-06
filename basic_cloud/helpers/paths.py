@@ -1,3 +1,5 @@
+import zipfile
+from io import BytesIO
 from pathlib import Path
 
 from pydantic import BaseModel
@@ -54,3 +56,15 @@ def create_root_path(
         else:
             root_path = homes_path
     return root_path
+
+
+def create_zip(root_path: Path) -> BytesIO:
+    file_obj = BytesIO()
+    with zipfile.ZipFile(
+            file_obj, mode="w",
+            compression=zipfile.ZIP_STORED,
+            compresslevel=None) as zip_obj:
+        for file_path in root_path.rglob("*"):
+            zip_obj.write(file_path, file_path.relative_to(root_path))
+    file_obj.seek(0)
+    return file_obj

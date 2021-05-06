@@ -18,7 +18,18 @@ function delete_children(parent) {
         parent.removeChild(parent.lastChild);
     }
 }
-
+/**
+ * trigger a download of file
+ * @param {string} href - the href to download from
+ * @param {string} filename - the filename of the download
+ */
+function download(href, filename) {
+    const a_elem = document.createElement("a");
+    a_elem.href = href;
+    a_elem.setAttribute("download", filename);
+    a_elem.click();
+    a_elem.remove();
+}
 /**
  * create file and directory row elements
  * and control their function
@@ -69,6 +80,9 @@ class FileDirRow{
             this.add_dir_root_navigate();
         }
     }
+    add_dir_zip_download() {
+        this.download_bnt_elem.addEventListener("click", _ => { start_download_zip(this.path) });
+    }
     make_file_row() {
         this.download_bnt_elem.addEventListener("click", _ => { start_download_file(this.path) });
     }
@@ -80,12 +94,12 @@ class FileDirRow{
     }
     make_dir_row(edit_allowed = true) {
         if (!edit_allowed) { this.disable_edit(); }
-        this.disable_download();// TODO remove this when download dir is implemented
+        this.add_dir_zip_download();
         this.add_dir_navigate();
     }
     make_dir_root_row() {
         this.disable_edit();
-        this.disable_download();// TODO remove this when download dir is implemented
+        this.add_dir_zip_download();
         this.add_dir_dir_navigate();
     }
     append_elements(parent) {
@@ -320,21 +334,44 @@ async function fetch_mkdir(directory, name) {
     if (!resp.ok) { throw new Error(resp.status) }
     return await resp.text();
 }
-
+/**
+ * download a directory as a zip
+ * @param {string} directory - the directory
+ */
+async function fetch_download_zip(directory) {
+    directory = btoa(directory);
+    var api_url = "/api/directory/download/" + directory;
+    const resp = await fetch(api_url,
+        {
+            method: "GET",
+            headers: get_auth_headers("text/plain"),
+        });
+    if (resp.status === 401) { navigate_to_login(); }
+    if (!resp.ok) { throw new Error(resp.status) }
+    return await resp.blob();
+}
+/**
+ * download a directory as a zip
+ * @param {string} directory - the directory to download
+ */
+function start_download_zip(directory) {
+    fetch_download_zip(directory)
+        .then(blob => {
+            const url = URL.createObjectURL(blob);
+            download(url, directory);
+            URL.revokeObjectURL(url);
+        });
+}
 /**
  * start downloading a file
  * @param {string} file_path - path of file to download
  */
 function start_download_file(file_path) {
     fetch_download_token(file_path).then(token => {
-        const a_elem = document.createElement("a");
-        a_elem.href = "/api/file/download/by-token/" + token;
-        a_elem.setAttribute("download", true);
-        a_elem.click();
-        a_elem.remove();
+        const url = "/api/file/download/by-token/" + token;
+        download(url, file_path);
     });
 }
-
 /**
  * start uploading a file
  * @param {string} root_path - the path to use for upload destination
