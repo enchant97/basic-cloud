@@ -15,7 +15,10 @@ from ..helpers.paths import (PathContent, Roots, create_root_path, create_zip,
 router = APIRouter()
 
 
-@router.post("/contents", response_model=List[PathContent])
+@router.post(
+    "/contents",
+    response_model=List[PathContent],
+    description="get a specific directory content")
 async def get_directory_contents(
         directory: Path = Body(..., embed=True),
         curr_user: models.User = Depends(get_current_active_user)):
@@ -46,7 +49,10 @@ async def get_directory_contents(
     return relative_dir_contents(root_path)
 
 
-@router.get("/roots", response_model=Roots)
+@router.get(
+    "/roots",
+    response_model=Roots,
+    description="get the root directories")
 async def get_roots(curr_user: models.User = Depends(get_current_active_user)):
     share_path = get_settings().SHARED_PATH.name
     home_path = str(Path(get_settings().HOMES_PATH.name)\
@@ -54,7 +60,10 @@ async def get_roots(curr_user: models.User = Depends(get_current_active_user)):
     return Roots(shared=share_path, home=home_path)
 
 
-@router.post("/mkdir", response_class=PlainTextResponse)
+@router.post(
+    "/mkdir",
+    response_class=PlainTextResponse,
+    description="create a directory")
 async def create_directory(
         directory: Path = Body(..., embed=True),
         name: Path = Body(..., embed=True),
@@ -77,7 +86,10 @@ async def create_directory(
     return directory
 
 
-@router.get("/download/{directory}", response_class=StreamingResponse)
+@router.get(
+    "/download/{directory}",
+    response_class=StreamingResponse,
+    description="download as a zip, directory must be encoded as base64")
 async def download_zip(
         directory: str,
         curr_user: models.User = Depends(get_current_active_user)):
