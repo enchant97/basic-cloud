@@ -1,6 +1,6 @@
 # the web api
 fastapi
-uvicorn
+uvicorn[websockets]
 python-multipart
 # database
 tortoise-orm
