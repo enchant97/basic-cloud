@@ -11,6 +11,10 @@
     --border-radius: 10px;
     --font-family-title: 'Roboto', sans-serif;
     --font-family-main: 'Open Sans', sans-serif;
+    --blue: #1e76be;
+    --green: #015801;
+    --orange: #c27400;
+    --red: #b4281e;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -30,7 +34,8 @@ input,
 label,
 button,
 a,
-footer {
+footer,
+strong {
     font-family: var(--font-family-main);
     color: var(--font-dark);
     font-size: 0.9em;
@@ -149,4 +154,33 @@ main div#files-and-dirs button {
 
 #curr-directory {
     text-align: left;
+}
+
+.loading {
+    width: fit-content;
+    margin: auto;
+    color: var(--font-light);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    text-align: center;
+}
+
+.spin-load {
+    border: 5px solid #f3f3f3;
+    border-radius: 50%;
+    border-top: 5px solid var(--blue);
+    width: 50px;
+    height: 50px;
+    animation: spin 700ms linear infinite;
+}
+
+@keyframes spin {
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
 }

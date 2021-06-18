@@ -2,6 +2,41 @@
 
 const TOKEN_KEY = "token";
 var curr_dir;
+
+/**
+ * add a spinning loader to the parent
+ * of the target element and hides the target
+ * @param {Element} target_element - the element that is being loaded
+ * @returns the loading element
+ */
+function add_spin_loader(target_element) {
+    const loading_element = document.createElement("div");
+    const spinning_element = document.createElement("div");
+    const label_element = document.createElement("strong");
+
+    loading_element.classList.add("loading");
+    spinning_element.classList.add("spin-load");
+    label_element.innerText = "Loading";
+
+    loading_element.append(spinning_element);
+    loading_element.append(label_element);
+    target_element.parentElement.append(loading_element);
+
+    target_element.style.display = "none";
+    return loading_element;
+}
+
+/**
+ * removes the loading status and
+ * unhides the target element
+ * @param {Element} target_element - the element that has finished loaded
+ * @param {Element} loading_element - the element showing loading
+ */
+function remove_spin_loader(target_element, loading_element) {
+    target_element.style = null;
+    loading_element.remove();
+}
+
 /**
  * redirect to the login page
  */
@@ -34,7 +69,7 @@ function download(href, filename) {
  * create file and directory row elements
  * and control their function
  */
-class FileDirRow{
+class FileDirRow {
     constructor(path, name) {
         this.name = name;
         this.path = path;
@@ -462,8 +497,10 @@ function do_logout() {
  * load and display the root directories
  */
 async function load_roots() {
-    const roots = await fetch_root_dirs();
     const files_and_dirs = document.getElementById("files-and-dirs");
+    const loading_element = add_spin_loader(files_and_dirs);
+    const roots = await fetch_root_dirs();
+
     delete_children(files_and_dirs);
     append_directory_root_row_element(files_and_dirs, roots.shared, roots.shared);
     append_directory_root_row_element(files_and_dirs, roots.home, roots.home);
@@ -471,6 +508,7 @@ async function load_roots() {
     curr_dir = null;
     document.getElementById("upload-file-bnt").setAttribute("disabled", true);
     document.getElementById("create-dir-bnt").setAttribute("disabled", true);
+    remove_spin_loader(files_and_dirs, loading_element);
 }
 
 /**
@@ -478,9 +516,9 @@ async function load_roots() {
  * @param {string} new_directory - the new directory to navigate to
  */
 async function change_directory(new_directory) {
-    const dir_content = await fetch_dir_content(new_directory);
-
     const files_and_dirs = document.getElementById("files-and-dirs");
+    const loading_element = add_spin_loader(files_and_dirs);
+    const dir_content = await fetch_dir_content(new_directory);
 
     delete_children(files_and_dirs);
 
@@ -500,6 +538,7 @@ async function change_directory(new_directory) {
     document.getElementById("upload-file-bnt").removeAttribute("disabled");
     document.getElementById("create-dir-bnt").removeAttribute("disabled");
     update_curr_dir_status(new_directory.replace("\\", "/"));
+    remove_spin_loader(files_and_dirs, loading_element);
 }
 
 /**
