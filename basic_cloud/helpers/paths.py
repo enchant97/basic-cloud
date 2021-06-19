@@ -58,6 +58,27 @@ def create_root_path(
     return root_path
 
 
+def is_root_path(
+        absolute_path: Path,
+        homes_path: Path,
+        shared_path: Path,
+        username: str) -> bool:
+    """
+    checks if the absolute path given is a root path (home or shared)
+
+        :param absolute_path: the path to check
+        :param homes_path: the path to the homes directory
+        :param shared_path: the path to the shared directory
+        :param username: the username
+        :return: whether path is just a root path
+    """
+    if (absolute_path == shared_path or
+            absolute_path == homes_path or
+            absolute_path == homes_path.joinpath(username)):
+        return True
+    return False
+
+
 def create_zip(root_path: Path) -> BytesIO:
     file_obj = BytesIO()
     with zipfile.ZipFile(

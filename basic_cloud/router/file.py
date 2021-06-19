@@ -18,6 +18,40 @@ router = APIRouter()
 download_tokens = dict()
 
 
+@router.delete(
+    "/rm",
+    description="delete a file")
+async def delete_file(
+        file_path: Path = Body(..., embed=True),
+        curr_user: models.User = Depends(get_current_active_user)):
+
+    try:
+        full_path = create_root_path(
+            file_path,
+            get_settings().HOMES_PATH,
+            get_settings().SHARED_PATH,
+            curr_user.username,
+        )
+        if not full_path.exists():
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="directory/file must exist",
+            )
+        if not full_path.is_file():
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="path must be a file",
+            )
+
+        full_path.unlink(missing_ok=True)
+
+    except PathNotExists:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="unknown root directory",
+        )
+
+
 @router.post("/download/new-token")
 async def create_download_token(
         file_path: Path = Body(..., embed=True),

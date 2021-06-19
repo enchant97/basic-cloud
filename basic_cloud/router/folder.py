@@ -1,4 +1,5 @@
 import base64
+import shutil
 from pathlib import Path
 from typing import List
 
@@ -11,7 +12,7 @@ from ..database import models
 from ..helpers.auth import get_current_active_user, get_current_user
 from ..helpers.exceptions import PathNotExists
 from ..helpers.paths import (PathContent, Roots, create_root_path, create_zip,
-                             relative_dir_contents)
+                             is_root_path, relative_dir_contents)
 from ..shared import watchdog_ws_handler
 
 router = APIRouter()
@@ -86,6 +87,49 @@ async def create_directory(
 
     full_path.mkdir(parents=True, exist_ok=True)
     return directory
+
+
+@router.delete(
+    "/rm",
+    description="delete a directory")
+async def delete_directory(
+        directory: Path = Body(..., embed=True),
+        curr_user: models.User = Depends(get_current_active_user)):
+
+    try:
+        full_path = create_root_path(
+            directory,
+            get_settings().HOMES_PATH,
+            get_settings().SHARED_PATH,
+            curr_user.username,
+        )
+        if is_root_path(
+                full_path,
+                get_settings().HOMES_PATH,
+                get_settings().SHARED_PATH,
+                curr_user.username):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="cannot delete root directory",
+            )
+        if not full_path.exists():
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="directory must exist",
+            )
+        if not full_path.is_dir():
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="path must be a directory",
+            )
+
+        shutil.rmtree(full_path)
+
+    except PathNotExists:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="unknown root directory",
+        )
 
 
 @router.get(

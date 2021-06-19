@@ -76,7 +76,6 @@ class FileDirRow {
 
         this.create_elements();
         this.set_names();
-        this.disable_edit();// TODO Remove when delete is implemented
     }
     create_elements() {
         this.icon_elem = document.createElement("img");
@@ -118,8 +117,15 @@ class FileDirRow {
     add_dir_zip_download() {
         this.download_bnt_elem.addEventListener("click", _ => { start_download_zip(this.path) });
     }
-    make_file_row() {
+    make_file_row(edit_allowed = true) {
+        if (!edit_allowed) { this.disable_edit(); }
+        else {
+            this.delete_bnt_elem.addEventListener("click", _ => { fetch_rmfile(this.path) });
+        }
         this.download_bnt_elem.addEventListener("click", _ => { start_download_file(this.path) });
+    }
+    make_dir_row_rm() {
+        this.delete_bnt_elem.addEventListener("click", _ => { fetch_rmdir(this.path) });
     }
     make_up_dir_row() {
         this.disable_edit();
@@ -129,6 +135,7 @@ class FileDirRow {
     }
     make_dir_row(edit_allowed = true) {
         if (!edit_allowed) { this.disable_edit(); }
+        else { this.make_dir_row_rm(); }
         this.add_dir_zip_download();
         this.add_dir_navigate();
     }
@@ -315,7 +322,21 @@ async function fetch_root_dirs() {
     if (resp.status === 401) { navigate_to_login(); }
     return await resp.json();
 }
-
+/**
+ * remove a file
+ * @param {string} file_path - file path
+ */
+async function fetch_rmfile(file_path) {
+    const resp = await fetch("/api/file/rm",
+        {
+            method: "DELETE",
+            body: JSON.stringify({ file_path }),
+            headers: get_auth_headers(),
+        });
+    if (resp.status === 401) { navigate_to_login(); }
+    if (!resp.ok) { throw new Error(resp.status) }
+    return await resp.text();
+}
 /**
  * request a download token
  * @param {string} file_path - path of file to download
@@ -363,6 +384,21 @@ async function fetch_mkdir(directory, name) {
         {
             method: "POST",
             body: JSON.stringify({ directory, name }),
+            headers: get_auth_headers(),
+        });
+    if (resp.status === 401) { navigate_to_login(); }
+    if (!resp.ok) { throw new Error(resp.status) }
+    return await resp.text();
+}
+/**
+ * remove a directory
+ * @param {string} directory - directory path
+ */
+async function fetch_rmdir(directory) {
+    const resp = await fetch("/api/directory/rm",
+        {
+            method: "DELETE",
+            body: JSON.stringify({ directory }),
             headers: get_auth_headers(),
         });
     if (resp.status === 401) { navigate_to_login(); }
