@@ -10,6 +10,7 @@ class Settings(BaseSettings):
     DB_URI: str = "sqlite://app_data.db"
     SECRET_KEY: str
     SIGNUPS_ALLOWED: bool = True
+    HISTORY_LOG: bool = True
 
     HOST: str = "127.0.0.1"
     PORT: int = 8000

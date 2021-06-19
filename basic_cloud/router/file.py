@@ -9,8 +9,9 @@ from fastapi.param_functions import File, Form
 from fastapi.responses import FileResponse
 
 from ..config import get_settings
-from ..database import models
+from ..database import crud, models
 from ..helpers.auth import get_current_active_user
+from ..helpers.constants import ContentChangeTypes
 from ..helpers.exceptions import PathNotExists
 from ..helpers.paths import create_root_path
 
@@ -44,6 +45,13 @@ async def delete_file(
             )
 
         full_path.unlink(missing_ok=True)
+
+        if get_settings().HISTORY_LOG:
+            await crud.create_content_change(
+                file_path,
+                ContentChangeTypes.DELETION,
+                False
+            )
 
     except PathNotExists:
         raise HTTPException(
@@ -151,5 +159,12 @@ async def upload_file_overwrite(
     async with aiofiles.open(root_path, "wb") as fo:
         await fo.write(await file.read())
         await file.close()
+
+    if get_settings().HISTORY_LOG:
+        await crud.create_content_change(
+            directory.joinpath(file.filename),
+            ContentChangeTypes.CREATION,
+            False
+        )
 
     return {"path": directory.joinpath(file.filename)}

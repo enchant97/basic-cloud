@@ -8,8 +8,9 @@ from fastapi import (APIRouter, Body, Depends, HTTPException, WebSocket,
 from fastapi.responses import PlainTextResponse, StreamingResponse
 
 from ..config import get_settings
-from ..database import models
+from ..database import crud, models
 from ..helpers.auth import get_current_active_user, get_current_user
+from ..helpers.constants import ContentChangeTypes
 from ..helpers.exceptions import PathNotExists
 from ..helpers.paths import (PathContent, Roots, create_root_path, create_zip,
                              is_root_path, relative_dir_contents)
@@ -86,6 +87,12 @@ async def create_directory(
         )
 
     full_path.mkdir(parents=True, exist_ok=True)
+    if get_settings().HISTORY_LOG:
+        await crud.create_content_change(
+            directory,
+            ContentChangeTypes.CREATION,
+            True
+        )
     return directory
 
 
@@ -124,6 +131,12 @@ async def delete_directory(
             )
 
         shutil.rmtree(full_path)
+        if get_settings().HISTORY_LOG:
+            await crud.create_content_change(
+                directory,
+                ContentChangeTypes.DELETION,
+                True
+            )
 
     except PathNotExists:
         raise HTTPException(
@@ -143,7 +156,7 @@ async def download_zip(
     directory = Path(directory)
 
     try:
-        directory = create_root_path(
+        full_path = create_root_path(
             directory,
             get_settings().HOMES_PATH,
             get_settings().SHARED_PATH,
@@ -155,18 +168,24 @@ async def download_zip(
             detail="unknown root directory",
         )
 
-    if not directory.exists():
+    if not full_path.exists():
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="directory must exist",
         )
-    if not directory.is_dir():
+    if not full_path.is_dir():
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="path must be a directory",
         )
 
-    zip_obj = create_zip(directory)
+    zip_obj = create_zip(full_path)
+    if get_settings().HISTORY_LOG:
+        await crud.create_content_change(
+            directory,
+            ContentChangeTypes.DOWNLOAD,
+            True
+        )
     return StreamingResponse(zip_obj, media_type="application/zip")
 
 
