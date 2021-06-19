@@ -282,7 +282,7 @@ async function fetch_token(username, password) {
 }
 
 async function fetch_create_account(username, password) {
-    const resp = await fetch("/api/user",
+    const resp = await fetch("/api/users",
         {
             method: "POST",
             body: JSON.stringify({ username, password }),
