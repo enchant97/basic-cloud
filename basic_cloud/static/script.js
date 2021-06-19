@@ -4,6 +4,22 @@ const TOKEN_KEY = "token";
 var curr_dir;
 
 /**
+ * gets the filename from a filepath
+ * @param {String} file_path - the filepath to convert
+ * @returns the filename
+ */
+function path_to_filename(file_path) {
+    // convert windows filepath to unix/linux style
+    file_path = file_path.replace("\\", "/");
+
+    var last_slash = file_path.lastIndexOf("/");
+    if (last_slash === -1) {
+        return file_path;
+    }
+
+    return file_path.substring(last_slash + 1);
+}
+/**
  * add a spinning loader to the parent
  * of the target element and hides the target
  * @param {Element} target_element - the element that is being loaded
@@ -338,24 +354,6 @@ async function fetch_rmfile(file_path) {
     return await resp.text();
 }
 /**
- * request a download token
- * @param {string} file_path - path of file to download
- * @returns download token
- */
-async function fetch_download_token(file_path) {
-    const resp = await fetch("/api/file/download/new-token",
-        {
-            method: "POST",
-            body: JSON.stringify({ file_path: file_path }),
-            headers: get_auth_headers(),
-        });
-    if (resp.status === 401) { navigate_to_login(); }
-    if (!resp.ok) { throw new Error(resp.status) }
-    const json_data = await resp.json();
-    return json_data.token;
-}
-
-/**
  * upload a file
  * @param {FormData} form_data - the file and directory to upload to
  * @returns
@@ -408,6 +406,7 @@ async function fetch_rmdir(directory) {
 /**
  * download a directory as a zip
  * @param {string} directory - the directory
+ * @returns the downloaded blob
  */
 async function fetch_download_zip(directory) {
     directory = btoa(directory);
@@ -434,14 +433,34 @@ function start_download_zip(directory) {
         });
 }
 /**
+ * download a file
+ * @param {String} file_path - the filepath
+ * @returns the downloaded blob
+ */
+async function fetch_download_file(file_path) {
+    file_path = btoa(file_path);
+    var api_url = "/api/file/download/" + file_path;
+    const resp = await fetch(api_url,
+        {
+            method: "GET",
+            headers: get_auth_headers("text/plain"),
+        });
+    if (resp.status === 401) { navigate_to_login(); }
+    if (!resp.ok) { throw new Error(resp.status) }
+    return await resp.blob();
+}
+/**
  * start downloading a file
  * @param {string} file_path - path of file to download
  */
 function start_download_file(file_path) {
-    fetch_download_token(file_path).then(token => {
-        const url = "/api/file/download/by-token/" + token;
-        download(url, file_path);
-    });
+    const filename = path_to_filename(file_path);
+    fetch_download_file(file_path)
+        .then(blob => {
+            const url = URL.createObjectURL(blob);
+            download(url, filename);
+            URL.revokeObjectURL(url);
+        });
 }
 /**
  * start uploading a file

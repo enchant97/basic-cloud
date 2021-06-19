@@ -1,6 +1,5 @@
-from datetime import datetime, timedelta
+import base64
 from pathlib import Path
-from uuid import UUID, uuid4
 
 import aiofiles
 from fastapi import (APIRouter, Body, Depends, Form, HTTPException, UploadFile,
@@ -16,7 +15,6 @@ from ..helpers.exceptions import PathNotExists
 from ..helpers.paths import create_root_path
 
 router = APIRouter()
-download_tokens = dict()
 
 
 @router.delete(
@@ -60,12 +58,18 @@ async def delete_file(
         )
 
 
-@router.post("/download/new-token")
-async def create_download_token(
-        file_path: Path = Body(..., embed=True),
+@router.get(
+    "/download/{file_path}",
+    response_class=FileResponse,
+    description="download a file")
+async def download_file(
+        file_path: str,
         curr_user: models.User = Depends(get_current_active_user)):
+    file_path = base64.b64decode(file_path).decode()
+    file_path = Path(file_path)
+
     try:
-        file_path = create_root_path(
+        full_path = create_root_path(
             file_path,
             get_settings().HOMES_PATH,
             get_settings().SHARED_PATH,
@@ -77,49 +81,26 @@ async def create_download_token(
             detail="unknown root directory",
         )
 
-    if not file_path.exists():
+    if not full_path.exists():
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="directory/file must exist",
         )
 
-    if not file_path.is_file():
+    if not full_path.is_file():
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="cannot be a directory",
         )
 
-    dt_now = datetime.utcnow()
-
-    # cleanup old tokens
-    for key in download_tokens:
-        if download_tokens[key]["expires"] < dt_now:
-            del download_tokens[key]
-
-    token = uuid4()
-    expires = dt_now + timedelta(minutes=4)
-    download_tokens[token] = {"path": file_path, "expires": expires}
-
-    return {"token": str(token)}
-
-
-@router.get("/download/by-token/{token}", response_class=FileResponse)
-async def download_file_by_token(token: UUID):
-    if token not in download_tokens:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
+    if get_settings().HISTORY_LOG:
+        await crud.create_content_change(
+            file_path,
+            ContentChangeTypes.DOWNLOAD,
+            False
         )
 
-    # remove the token so it can't be used again
-    token_contents = download_tokens.pop(token)
-
-    if token_contents["expires"] < datetime.utcnow():
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-        )
-
-    file_path = token_contents["path"]
-    return FileResponse(file_path, filename=file_path.name)
+    return FileResponse(full_path, filename=file_path.name)
 
 
 @router.post("/upload/overwrite")
