@@ -298,10 +298,11 @@ async function fetch_token(username, password) {
 }
 
 async function fetch_create_account(username, password) {
-    const resp = await fetch("/api/users",
+    const resp = await fetch("/api/users/",
         {
             method: "POST",
             body: JSON.stringify({ username, password }),
+            headers: { "Content-Type": "application/json" },
         });
     if (!resp.ok) { throw new Error(resp.status) }
     return await resp.json();
@@ -672,6 +673,12 @@ function handle_create_account_form() {
     else {
         fetch_create_account(username.value, password.value)
             .then(_ => { navigate_to_login() })
-            .catch(err => alert(err.message));
+            .catch(err => {
+                Popup.append_message(
+                    "User Creation Error",
+                    "error: " + err.message,
+                    POPUP_MESSAGE_TYPE_CLASS.ERROR
+                );
+            });
     }
 }
