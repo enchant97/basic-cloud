@@ -10,6 +10,7 @@
         rel="stylesheet">
     <link rel="stylesheet" href="/static/style.css">
     <script src="/static/errors.js"></script>
+    <script src="/static/popup.js"></script>
     <script src="/static/script.js"></script>
     {% block extrahead %}{% endblock %}
 </head>
@@ -19,7 +20,7 @@
     <header>
         <h1>{{ self.title() }}</h1>
         <nav>
-        {% block nav %}{% endblock %}
+            {% block nav %}{% endblock %}
         </nav>
     </header>
     <main>

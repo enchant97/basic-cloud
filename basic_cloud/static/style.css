@@ -35,7 +35,8 @@ label,
 button,
 a,
 footer,
-strong {
+strong,
+p {
     font-family: var(--font-family-main);
     color: var(--font-dark);
     font-size: 0.9em;
@@ -156,6 +157,31 @@ main div#files-and-dirs button {
     text-align: left;
 }
 
+.down {
+    display: flex;
+    flex-direction: column;
+    word-break: break-all;
+}
+
+.popup {
+    z-index: 90;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #00000080;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.popup .inner {
+    border-radius: var(--border-radius);
+    border: 3px solid var(--border-col);
+    background-color: var(--bg-body);
+}
+
 .loading {
     width: fit-content;
     margin: auto;
@@ -173,6 +199,7 @@ main div#files-and-dirs button {
     width: 50px;
     height: 50px;
     animation: spin 700ms linear infinite;
+    margin: auto;
 }
 
 @keyframes spin {

@@ -474,9 +474,28 @@ async function start_upload_file(root_path, file_elem) {
     form_data.append("directory", root_path);
     await fetch_upload_file(form_data);
     file_elem.remove();
-    alert("uploaded");
 }
-
+function handle_file_upload(file_elem) {
+    const loading_popup = Popup.append_loading(
+        "Uploading File",
+        "uploading please wait"
+    );
+    start_upload_file(curr_dir, file_elem)
+        .then(_ => {
+            loading_popup.remove();
+            Popup.append_message("Upload Success", "file has been uploaded")
+        })
+        .catch(_err => {
+            loading_popup.remove();
+            Popup.append_message(
+                "Upload Error",
+                "the upload has failed",
+                POPUP_MESSAGE_TYPE_CLASS.ERROR
+            );
+            // cleanup
+            file_elem.remove();
+        });
+}
 /**
  * show the dialog for uploading a
  * new file to current directory and then upload it
@@ -486,12 +505,16 @@ function upload_file() {
         const file_elem = document.createElement("input");
         file_elem.setAttribute("type", "file");
         file_elem.addEventListener("input", _ => {
-            start_upload_file(curr_dir, file_elem);
+            handle_file_upload(file_elem);
         });
         file_elem.click();
     }
     else {
-        alert("cannot upload here...");
+        Popup.append_message(
+            "Upload Error",
+            "cannot upload here",
+            POPUP_MESSAGE_TYPE_CLASS.ERROR
+        );
     }
 }
 
@@ -504,19 +527,34 @@ function create_dir() {
         if (name) {
             fetch_mkdir(curr_dir, name)
                 .then(directory => {
-                    alert("created directory, " + directory);
+                    Popup.append_message(
+                        "Directory Creation Success",
+                        "created directory at: " + directory
+                    );
                     change_directory(curr_dir);
                 })
-                .catch(err => {
-                    alert("failed to create directory")
+                .catch(_err => {
+                    Popup.append_message(
+                        "Directory Creation Error",
+                        "unhandled error",
+                        POPUP_MESSAGE_TYPE_CLASS.ERROR
+                    );
                 });
         }
         else {
-            alert("invalid name given");
+            Popup.append_message(
+                "Directory Creation Error",
+                "invalid name given",
+                POPUP_MESSAGE_TYPE_CLASS.ERROR
+            );
         }
     }
     else {
-        alert("cannot create directory here...");
+        Popup.append_message(
+            "Directory Creation Error",
+            "cannot create directory here",
+            POPUP_MESSAGE_TYPE_CLASS.ERROR
+        );
     }
 }
 
@@ -623,7 +661,11 @@ function handle_create_account_form() {
     const password = document.getElementById("password");
     const password_conf = document.getElementById("password-conf");
     if (password.value !== password_conf.value) {
-        alert("passwords do not match");
+        Popup.append_message(
+            "User Creation Error",
+            "passwords do not match",
+            POPUP_MESSAGE_TYPE_CLASS.ERROR
+        );
         password_conf.value = "";
         password_conf.focus();
     }
