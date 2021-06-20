@@ -428,7 +428,8 @@ function start_download_zip(directory) {
     fetch_download_zip(directory)
         .then(blob => {
             const url = URL.createObjectURL(blob);
-            download(url, directory);
+            const filename = path_to_filename(directory)
+            download(url, filename);
             URL.revokeObjectURL(url);
         });
 }
