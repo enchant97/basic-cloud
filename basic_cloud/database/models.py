@@ -1,6 +1,8 @@
 from tortoise.fields.data import (BinaryField, BooleanField, CharField,
                                   DatetimeField, IntEnumField, JSONField,
                                   UUIDField)
+from tortoise.fields.relational import (ForeignKeyField, ForeignKeyRelation,
+                                        ReverseRelation)
 from tortoise.models import Model
 
 from ..helpers.constants import ContentChangeTypes
@@ -20,6 +22,8 @@ class User(Model, ModifyMixin):
     hashed_password = BinaryField()
     disabled = BooleanField(default=False)
 
+    content_changes: ReverseRelation["ContentChange"]
+
 
 class ContentChange(Model):
     """
@@ -35,4 +39,9 @@ class ContentChange(Model):
     path_hash = BinaryField()
     type_enum = IntEnumField(ContentChangeTypes)
     is_dir = BooleanField()
+    triggered_by: ForeignKeyRelation[User] = ForeignKeyField(
+        "models.User",
+        "content_changes",
+        null=True
+    )
     extra_meta = JSONField(null=True)

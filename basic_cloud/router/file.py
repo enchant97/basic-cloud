@@ -48,7 +48,8 @@ async def delete_file(
             await crud.create_content_change(
                 file_path,
                 ContentChangeTypes.DELETION,
-                False
+                False,
+                curr_user,
             )
 
     except PathNotExists:
@@ -97,7 +98,8 @@ async def download_file(
         await crud.create_content_change(
             file_path,
             ContentChangeTypes.DOWNLOAD,
-            False
+            False,
+            curr_user,
         )
 
     return FileResponse(full_path, filename=file_path.name)
@@ -145,7 +147,8 @@ async def upload_file_overwrite(
         await crud.create_content_change(
             directory.joinpath(file.filename),
             ContentChangeTypes.CREATION,
-            False
+            False,
+            curr_user,
         )
 
     return {"path": directory.joinpath(file.filename)}

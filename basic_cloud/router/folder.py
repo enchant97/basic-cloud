@@ -91,7 +91,8 @@ async def create_directory(
         await crud.create_content_change(
             directory,
             ContentChangeTypes.CREATION,
-            True
+            True,
+            curr_user,
         )
     return directory
 
@@ -135,7 +136,8 @@ async def delete_directory(
             await crud.create_content_change(
                 directory,
                 ContentChangeTypes.DELETION,
-                True
+                True,
+                curr_user,
             )
 
     except PathNotExists:
@@ -184,7 +186,8 @@ async def download_zip(
         await crud.create_content_change(
             directory,
             ContentChangeTypes.DOWNLOAD,
-            True
+            True,
+            curr_user,
         )
     return StreamingResponse(zip_obj, media_type="application/zip")
 

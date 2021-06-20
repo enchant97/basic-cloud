@@ -25,11 +25,13 @@ async def create_content_change(
         path: Path,
         change_type: ContentChangeTypes,
         is_dir: bool,
+        triggered_by: User = None,
         extra_meta: dict = None) -> ContentChange:
     kwargs = {
         "path_hash": sha256(str(path).encode()).digest(),
         "type_enum": change_type,
         "is_dir": is_dir,
+        "triggered_by": triggered_by,
         "extra_meta": extra_meta,
     }
     content_change_row = ContentChange(**kwargs)
