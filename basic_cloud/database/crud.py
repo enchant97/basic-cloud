@@ -1,9 +1,9 @@
-from hashlib import sha256
 from pathlib import Path
 from typing import List
 from uuid import UUID
 
 from ..helpers.constants import ContentChangeTypes
+from ..helpers.paths import hash_path
 from .models import ContentChange, User
 
 
@@ -28,7 +28,7 @@ async def create_content_change(
         triggered_by: User = None,
         extra_meta: dict = None) -> ContentChange:
     kwargs = {
-        "path_hash": sha256(str(path).encode()).digest(),
+        "path_hash": hash_path(path),
         "type_enum": change_type,
         "is_dir": is_dir,
         "triggered_by": triggered_by,
@@ -40,5 +40,5 @@ async def create_content_change(
 
 
 async def get_content_changes_by_path(path: Path) -> List[ContentChange]:
-    path_hash: sha256(str(path).encode()).digest()
+    path_hash = hash_path(path)
     return await ContentChange.filter(path_hash=path_hash).all()

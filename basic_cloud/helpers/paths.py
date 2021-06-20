@@ -1,4 +1,5 @@
 import zipfile
+from hashlib import sha256
 from io import BytesIO
 from pathlib import Path
 
@@ -89,3 +90,13 @@ def create_zip(root_path: Path) -> BytesIO:
             zip_obj.write(file_path, file_path.relative_to(root_path))
     file_obj.seek(0)
     return file_obj
+
+
+def hash_path(path: Path) -> bytes:
+    """
+    hash a pathlib Path object, uses sha256
+
+        :param path: the path to hash
+        :return: the digest
+    """
+    return sha256(str(path).encode()).digest()
