@@ -61,7 +61,10 @@ async def get_roots(curr_user: models.User = Depends(get_current_active_user)):
     share_path = get_settings().SHARED_PATH.name
     home_path = str(Path(get_settings().HOMES_PATH.name)\
         .joinpath(curr_user.username))
-    return Roots(shared=share_path, home=home_path)
+    return Roots(
+        shared=share_path.replace("\\", "/"),
+        home=home_path.replace("\\", "/"),
+    )
 
 
 @router.post(
