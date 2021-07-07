@@ -4,12 +4,16 @@ from tortoise.contrib.fastapi import register_tortoise
 from .config import get_settings
 from .database import models
 from .helpers.constants import STATIC
-from .router import auth, folder, html, users, file
+from .router import auth, file, folder, html, other, users
 
 tags_metadata = (
     {
         "name": "token",
         "description": "operations with user authentication tokens"
+    },
+    {
+        "name": "other",
+        "description": "operations that don't fit anywhere else"
     },
     {
         "name": "users",
@@ -34,6 +38,7 @@ app.mount("/static", STATIC, name="static")
 
 app.include_router(html.router, tags=["html"])
 app.include_router(auth.router, tags=["token"])
+app.include_router(other.router, prefix="/api", tags=["other"])
 app.include_router(users.router, prefix="/api/users", tags=["users"])
 app.include_router(folder.router, prefix="/api/directory", tags=["directories"])
 app.include_router(file.router, prefix="/api/file", tags=["files"])
