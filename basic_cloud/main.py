@@ -4,7 +4,7 @@ from tortoise.contrib.fastapi import register_tortoise
 from .config import get_settings
 from .database import models
 from .helpers.constants import STATIC
-from .router import auth, file, folder, html, other, users
+from .router import admin, auth, file, folder, html, other, users
 
 tags_metadata = (
     {
@@ -28,6 +28,10 @@ tags_metadata = (
         "description": "operations with files"
     },
     {
+        "name": "admin",
+        "description": "operations for admins"
+    },
+    {
         "name": "html",
         "description": "html pages to view"
     },
@@ -42,6 +46,7 @@ app.include_router(other.router, prefix="/api", tags=["other"])
 app.include_router(users.router, prefix="/api/users", tags=["users"])
 app.include_router(folder.router, prefix="/api/directory", tags=["directories"])
 app.include_router(file.router, prefix="/api/file", tags=["files"])
+app.include_router(admin.router, prefix="/api/admin", tags=["admin"])
 
 
 @app.on_event("startup")

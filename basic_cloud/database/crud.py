@@ -7,10 +7,22 @@ from ..helpers.paths import hash_path
 from .models import ContentChange, User
 
 
-async def create_user(username: str, hashed_password: str) -> User:
-    user = User(username=username, hashed_password=hashed_password.encode())
+async def create_user(username: str, hashed_password: str, is_admin: bool = False) -> User:
+    user = User(
+        username=username,
+        hashed_password=hashed_password.encode(),
+        is_admin=is_admin,
+    )
     await user.save()
     return user
+
+
+async def create_default_admin(username: str, hashed_password: str) -> User:
+    defaults = {
+        "hashed_password": hashed_password.encode(),
+        "is_admin": True,
+    }
+    return (await User.get_or_create(defaults, username=username))[0]
 
 
 async def get_user_by_username(username: str) -> User:

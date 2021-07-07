@@ -11,6 +11,7 @@ class Settings(BaseSettings):
     SECRET_KEY: str
     SIGNUPS_ALLOWED: bool = True
     HISTORY_LOG: bool = True
+    DEFAULT_ADMIN_UNAME: str = "admin"
 
     HOST: str = "127.0.0.1"
     PORT: int = 8000

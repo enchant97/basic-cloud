@@ -20,6 +20,7 @@ class User(Model, ModifyMixin):
     uuid = UUIDField(pk=True)
     username = CharField(25, unique=True)
     hashed_password = BinaryField()
+    is_admin = BooleanField(default=False)
     disabled = BooleanField(default=False)
 
     content_changes: ReverseRelation["ContentChange"]

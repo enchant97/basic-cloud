@@ -97,7 +97,6 @@ async def get_current_user(token: str = Depends(oauth2_scheme)) -> models.User:
     except (ValueError, JWTError):
         raise credentials_exception
     user = await crud.get_user_by_uuid(user_uuid)
-    # TODO check if token is expired
     if user is None:
         raise credentials_exception
     return user
@@ -113,4 +112,17 @@ async def get_current_active_user(
     """
     if current_user.disabled:
         raise HTTPException(status_code=400, detail="Inactive user")
+    return current_user
+
+
+async def get_current_admin_user(
+        current_user: models.User = Depends(get_current_user)) -> models.User:
+    """
+    uses get_current_active_user and also checks
+    whether the account has admin access
+
+        :return: the user
+    """
+    if current_user.is_admin:
+        raise HTTPException(status_code=400, detail="Not admin")
     return current_user

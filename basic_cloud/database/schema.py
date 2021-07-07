@@ -12,6 +12,7 @@ class User(ModifyBase):
     uuid: UUID4
     username: str
     disabled: bool = False
+    is_admin: bool = False
 
 
 class UserCreate(BaseModel):
