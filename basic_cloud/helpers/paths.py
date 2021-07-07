@@ -103,3 +103,13 @@ def hash_path(path: Path) -> bytes:
         :return: the digest
     """
     return sha256(str(path).encode()).digest()
+
+
+def calculate_directory_size(root_path: Path) -> int:
+    """
+    calculates the size in bytes of a directory and its contents
+
+        :param root_path: the root directory to calculate
+        :return: the calculated size in bytes
+    """
+    return sum(f.stat().st_size for f in root_path.glob('**/*') if f.is_file())

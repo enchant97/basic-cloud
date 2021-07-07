@@ -123,6 +123,6 @@ async def get_current_admin_user(
 
         :return: the user
     """
-    if current_user.is_admin:
+    if not current_user.is_admin:
         raise HTTPException(status_code=400, detail="Not admin")
     return current_user
