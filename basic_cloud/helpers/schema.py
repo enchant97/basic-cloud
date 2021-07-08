@@ -1,3 +1,5 @@
+from pathlib import Path
+
 from pydantic import BaseModel
 
 
@@ -6,6 +8,12 @@ class ApiVersion(BaseModel):
     oldest_compatible: str
 
 
+class DirectoryStats(BaseModel):
+    path: Path
+    bytes_size: int
+    file_count: int
+
+
 class RootStats(BaseModel):
-    shared_size: int
-    homes_size: int
+    shared: DirectoryStats
+    homes: DirectoryStats

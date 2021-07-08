@@ -113,3 +113,13 @@ def calculate_directory_size(root_path: Path) -> int:
         :return: the calculated size in bytes
     """
     return sum(f.stat().st_size for f in root_path.glob('**/*') if f.is_file())
+
+
+def calculate_directory_file_count(root_path: Path) -> int:
+    """
+    calculates the file count for a directory
+
+        :param root_path: the root directory to calculate
+        :return: the file count
+    """
+    return sum(1 for f in root_path.glob('**/*') if f.is_file())
