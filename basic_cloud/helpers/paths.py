@@ -3,23 +3,8 @@ from hashlib import sha256
 from io import BytesIO
 from pathlib import Path
 
-from pydantic import BaseModel
-
 from .exceptions import PathNotExists
-
-
-class PathMeta(BaseModel):
-    is_directory: bool
-
-
-class PathContent(BaseModel):
-    name: str
-    meta: PathMeta
-
-
-class Roots(BaseModel):
-    shared: str
-    home: str
+from .schema import PathContent, PathMeta
 
 
 def relative_dir_contents(root_path: Path):

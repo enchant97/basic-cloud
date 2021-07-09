@@ -12,8 +12,9 @@ from ..database import crud, models
 from ..helpers.auth import get_current_active_user, get_current_user
 from ..helpers.constants import ContentChangeTypes
 from ..helpers.exceptions import PathNotExists
-from ..helpers.paths import (PathContent, Roots, create_root_path, create_zip,
-                             is_root_path, relative_dir_contents)
+from ..helpers.paths import (create_root_path, create_zip, is_root_path,
+                             relative_dir_contents)
+from ..helpers.schema import PathContent, Roots
 from ..shared import watchdog_ws_handler
 
 router = APIRouter()
