@@ -1,3 +1,4 @@
+import os
 from typing import List
 from uuid import UUID
 
@@ -53,10 +54,12 @@ async def modify_user(
     try:
         # user wants to change username
         if modifications.username:
-            # TODO implement
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="changing username is not supported"
+            user = await crud.get_user_by_uuid(user_uuid)
+            if not user: raise DoesNotExist()
+
+            os.rename(
+                get_settings().HOMES_PATH.joinpath(user.username),
+                get_settings().HOMES_PATH.joinpath(modifications.username)
             )
 
         modifications = modifications.dict(exclude_unset=True)
