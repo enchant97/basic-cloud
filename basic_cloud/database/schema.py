@@ -1,6 +1,7 @@
 from datetime import datetime
 from pydantic import BaseModel
 from pydantic.types import UUID4
+from typing import Optional
 
 
 class ModifyBase(BaseModel):
@@ -18,6 +19,12 @@ class User(ModifyBase):
 class UserCreate(BaseModel):
     username: str
     password: str
+
+
+class UserModifyAdmin(BaseModel):
+    username: Optional[str]
+    disabled: Optional[bool]
+    is_admin: Optional[bool]
 
 
 class Token(BaseModel):
