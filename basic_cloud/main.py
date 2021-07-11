@@ -3,7 +3,7 @@ from tortoise.contrib.fastapi import register_tortoise
 
 from .config import get_settings
 from .database import models
-from .helpers.constants import STATIC
+from .helpers.constants import CURRENT_VERSION, STATIC
 from .router import admin, auth, file, folder, html, other, users
 
 tags_metadata = (
@@ -37,7 +37,12 @@ tags_metadata = (
     },
 )
 
-app = FastAPI(openapi_tags=tags_metadata)
+app = FastAPI(
+    title="Basic Cloud",
+    description="A 'cloud' storage API that is easy to use and modern",
+    version=CURRENT_VERSION,
+    openapi_tags=tags_metadata,
+)
 app.mount("/static", STATIC, name="static")
 
 app.include_router(html.router, tags=["html"])
