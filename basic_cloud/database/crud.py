@@ -44,6 +44,10 @@ async def update_user_by_uuid(user_uuid: UUID, data: dict) -> User:
     return user
 
 
+async def delete_user_by_uuid(user_uuid: UUID):
+    await User.filter(uuid=user_uuid).delete()
+
+
 async def create_content_change(
         path: Path,
         change_type: ContentChangeTypes,

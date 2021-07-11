@@ -1,4 +1,5 @@
 import os
+import shutil
 from typing import List
 from uuid import UUID
 
@@ -64,6 +65,24 @@ async def modify_user(
 
         modifications = modifications.dict(exclude_unset=True)
         await crud.update_user_by_uuid(user_uuid, modifications)
+    except DoesNotExist:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="user with that UUID does not exist"
+        )
+
+
+@router.delete(
+    "/users/{user_uuid}",
+    description="delete a user")
+async def delete_user(
+    user_uuid: UUID,
+    curr_user: models.User = Depends(get_current_admin_user)):
+    try:
+        username = (await crud.get_user_by_uuid(user_uuid)).username
+        await crud.delete_user_by_uuid(user_uuid)
+        shutil.rmtree(get_settings().HOMES_PATH.joinpath(username))
+
     except DoesNotExist:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
