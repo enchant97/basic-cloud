@@ -18,7 +18,7 @@ def relative_dir_contents(root_path: Path):
 
 
 def create_user_home_dir(username: str, homes_path: Path):
-    homes_path.joinpath(username).mkdir(exist_ok=True)
+    homes_path.joinpath(username).mkdir(exist_ok=True, parents=True)
 
 
 def create_root_path(

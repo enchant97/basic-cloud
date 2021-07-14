@@ -1,6 +1,8 @@
 "use strict";
 
 const TOKEN_KEY = "token";
+const USERNAME_KEY = "username";
+
 var curr_dir;
 
 /**
@@ -146,8 +148,13 @@ class FileDirRow {
     make_up_dir_row() {
         this.disable_edit();
         this.disable_download();
-        this.add_dir_navigate();
-
+        // if path is null then it must be "root"
+        if (this.path === null) {
+            this.add_dir_root_navigate();
+        }
+        else {
+            this.add_dir_navigate();
+        }
     }
     make_dir_row(edit_allowed = true) {
         if (!edit_allowed) { this.disable_edit(); }
@@ -232,6 +239,31 @@ function get_parent_dir(curr_dir) {
         return null;
     }
     return curr_dir.substring(0, last_i);
+}
+
+/**
+ * checks whether the path is at the "root"
+ * @param {string} the_dir - the current directory
+ * @returns bool for whether at root
+ */
+function directory_at_root(the_dir) {
+    if (the_dir == "homes/" + get_stored_username() || the_dir == "shared") {
+        return true;
+    }
+    return false;
+}
+
+function get_stored_username() {
+    let username = localStorage.getItem(USERNAME_KEY);
+    if (username === null) {
+        return sessionStorage.getItem(USERNAME_KEY);
+    }
+    return username
+}
+
+function remove_username() {
+    sessionStorage.removeItem(USERNAME_KEY);
+    localStorage.removeItem(USERNAME_KEY);
 }
 
 /**
@@ -571,11 +603,14 @@ async function do_login(username, password, rememberme) {
     const token = await fetch_token(username, password);
     // remove tokens from browser storage
     remove_token();
+    remove_username();
     // store the tokens
     if (rememberme) {
+        localStorage.setItem(USERNAME_KEY, username);
         localStorage.setItem(TOKEN_KEY, token);
     }
     else {
+        sessionStorage.setItem(USERNAME_KEY, username);
         sessionStorage.setItem(TOKEN_KEY, token);
     }
 }
@@ -585,6 +620,7 @@ async function do_login(username, password, rememberme) {
  */
 function do_logout() {
     remove_token();
+    remove_username();
     navigate_to_login();
 }
 
@@ -617,7 +653,12 @@ async function change_directory(new_directory) {
 
     delete_children(files_and_dirs);
 
-    append_directory_up_row_element(files_and_dirs, get_parent_dir(new_directory), "..");
+    if (curr_dir === null || directory_at_root(new_directory)) {
+        append_directory_up_row_element(files_and_dirs, null, "..");
+    }
+    else {
+        append_directory_up_row_element(files_and_dirs, get_parent_dir(new_directory), "..");
+    }
 
     dir_content.forEach(path_content => {
         const path_name = path_content.name;

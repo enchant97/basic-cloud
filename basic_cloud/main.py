@@ -56,6 +56,10 @@ app.include_router(admin.router, prefix="/api/admin", tags=["admin"])
 
 @app.on_event("startup")
 async def do_startup():
+    # create data directories
+    get_settings().SHARED_PATH.mkdir(parents=True, exist_ok=True)
+    get_settings().HOMES_PATH.mkdir(parents=True, exist_ok=True)
+
     # database setup
     register_tortoise(
         app,
