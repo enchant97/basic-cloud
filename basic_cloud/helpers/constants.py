@@ -9,7 +9,7 @@ TEMPLATES = Jinja2Templates(directory=MODULE_PATH / Path("templates"))
 STATIC = StaticFiles(directory=MODULE_PATH / Path("static"))
 
 # the current version
-CURRENT_VERSION = "0.2.0"
+CURRENT_VERSION = "0.3.0"
 # the oldest compatible version
 # that will work with current version
 OLDEST_COMPATIBLE_VERSION = "0.1.0"
