@@ -7,13 +7,14 @@ from fastapi import (APIRouter, Body, Depends, Form, HTTPException, UploadFile,
                      status)
 from fastapi.param_functions import File, Form
 from fastapi.responses import FileResponse
+from tortoise import timezone
 from tortoise.exceptions import DoesNotExist
 
 from ..config import get_settings
 from ..database import crud, models, schema
 from ..helpers.auth import get_current_active_user
 from ..helpers.constants import ContentChangeTypes
-from ..helpers.exceptions import PathNotExists
+from ..helpers.exceptions import PathNotExists, SharePathInvalid
 from ..helpers.paths import create_root_path
 
 router = APIRouter()
@@ -188,7 +189,11 @@ async def create_file_share(
             detail="unknown root directory",
         )
 
-    created_row = await crud.create_file_share(file_share.path)
+    created_row = await crud.create_file_share(
+        file_share.path,
+        file_share.expires,
+        file_share.users_left
+    )
     return created_row
 
 
@@ -246,18 +251,36 @@ async def get_file_share_meta(
 async def get_file_share_file(share_uuid: UUID):
     try:
         file_share = await crud.get_file_share_by_uuid(share_uuid)
-        # TODO check whether share has expired
-        # TODO check whether share has any uses left
+
+        # make sure share isn't expired or has run out of uses
+        if ((file_share.expires is not None and file_share.expires < timezone.now()) or
+                (file_share.uses_left is not None and file_share.uses_left < 1)):
+            raise SharePathInvalid()
+
         full_path = create_root_path(
             file_share.path,
             get_settings().HOMES_PATH,
             get_settings().SHARED_PATH,
         )
         if not full_path.exists():
+            # remove the share from database as path no longer exists
+            await crud.delete_file_share(share_uuid)
             raise PathNotExists()
+
+        if file_share.uses_left is not None:
+            # if the share has limited uses subtract one
+            file_share.uses_left -= 1
+            await file_share.save()
 
         return FileResponse(full_path, filename=full_path.name)
     except (PathNotExists, DoesNotExist):
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="unknown file share uuid"
+        ) from None
+    except SharePathInvalid:
+        # share has either run out of uses or expired
+        await crud.delete_file_share(share_uuid)
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="unknown file share uuid"

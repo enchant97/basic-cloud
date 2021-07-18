@@ -1,3 +1,4 @@
+from datetime import datetime
 from pathlib import Path
 from typing import List
 from uuid import UUID
@@ -78,8 +79,8 @@ async def get_content_changes_by_path(path: Path) -> List[ContentChange]:
 # FILE SHARE CRUD
 
 
-async def create_file_share(filepath: Path) -> FileShare:
-    file_share = FileShare(path=filepath)
+async def create_file_share(filepath: Path, expires: datetime, uses_left: int) -> FileShare:
+    file_share = FileShare(path=filepath, expires=expires, uses_left=uses_left)
     await file_share.save()
     return file_share
 
