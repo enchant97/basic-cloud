@@ -1,14 +1,16 @@
 import base64
 from pathlib import Path
+from uuid import UUID
 
 import aiofiles
 from fastapi import (APIRouter, Body, Depends, Form, HTTPException, UploadFile,
                      status)
 from fastapi.param_functions import File, Form
 from fastapi.responses import FileResponse
+from tortoise.exceptions import DoesNotExist
 
 from ..config import get_settings
-from ..database import crud, models
+from ..database import crud, models, schema
 from ..helpers.auth import get_current_active_user
 from ..helpers.constants import ContentChangeTypes
 from ..helpers.exceptions import PathNotExists
@@ -152,3 +154,111 @@ async def upload_file_overwrite(
         )
 
     return {"path": directory.joinpath(file.filename)}
+
+
+@router.post(
+    "/share",
+    response_model=schema.FileShare,
+    description="create a file share")
+async def create_file_share(
+        file_share: schema.FileShareCreate,
+        curr_user: models.User = Depends(get_current_active_user)):
+    try:
+        root_path = create_root_path(
+            file_share.path,
+            get_settings().HOMES_PATH,
+            get_settings().SHARED_PATH,
+            curr_user.username,
+        )
+        if not root_path.exists():
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="file must exist",
+            )
+
+        if not root_path.is_file():
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="cannot be a directory",
+            )
+
+    except PathNotExists:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="unknown root directory",
+        )
+
+    created_row = await crud.create_file_share(file_share.path)
+    return created_row
+
+
+@router.delete(
+    "/share/{share_uuid}",
+    description="delete a file share")
+async def delete_file_share(
+        share_uuid: UUID,
+        curr_user: models.User = Depends(get_current_active_user)):
+    try:
+        file_share = await crud.get_file_share_by_uuid(share_uuid)
+        # makes sure user has access to path
+        create_root_path(
+            file_share.path,
+            get_settings().HOMES_PATH,
+            get_settings().SHARED_PATH,
+            curr_user.username,
+        )
+        await crud.delete_file_share(share_uuid)
+    except (PathNotExists, DoesNotExist):
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="unknown file share uuid"
+        ) from None
+
+
+@router.get(
+    "/share/{share_uuid}",
+    response_model=schema.FileShare,
+    description="get a file shares meta")
+async def get_file_share_meta(
+        share_uuid: UUID,
+        curr_user: models.User = Depends(get_current_active_user)):
+    try:
+        file_share = await crud.get_file_share_by_uuid(share_uuid)
+        # makes sure user has access to path
+        create_root_path(
+            file_share.path,
+            get_settings().HOMES_PATH,
+            get_settings().SHARED_PATH,
+            curr_user.username,
+        )
+        return file_share
+    except (PathNotExists, DoesNotExist):
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="unknown file share uuid"
+        ) from None
+
+
+@router.get(
+    "/share/{share_uuid}/download",
+    response_class=FileResponse,
+    description="get a file shares file")
+async def get_file_share_file(share_uuid: UUID):
+    try:
+        file_share = await crud.get_file_share_by_uuid(share_uuid)
+        # TODO check whether share has expired
+        # TODO check whether share has any uses left
+        full_path = create_root_path(
+            file_share.path,
+            get_settings().HOMES_PATH,
+            get_settings().SHARED_PATH,
+        )
+        if not full_path.exists():
+            raise PathNotExists()
+
+        return FileResponse(full_path, filename=full_path.name)
+    except (PathNotExists, DoesNotExist):
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="unknown file share uuid"
+        ) from None

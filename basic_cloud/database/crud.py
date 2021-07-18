@@ -4,7 +4,9 @@ from uuid import UUID
 
 from ..helpers.constants import ContentChangeTypes
 from ..helpers.paths import hash_path
-from .models import ContentChange, User
+from .models import ContentChange, FileShare, User
+
+# USER CRUD
 
 
 async def create_user(username: str, hashed_password: str, is_admin: bool = False) -> User:
@@ -47,6 +49,8 @@ async def update_user_by_uuid(user_uuid: UUID, data: dict) -> User:
 async def delete_user_by_uuid(user_uuid: UUID):
     await User.filter(uuid=user_uuid).delete()
 
+# CONTENT CHANGE CRUD
+
 
 async def create_content_change(
         path: Path,
@@ -69,3 +73,20 @@ async def create_content_change(
 async def get_content_changes_by_path(path: Path) -> List[ContentChange]:
     path_hash = hash_path(path)
     return await ContentChange.filter(path_hash=path_hash).all()
+
+
+# FILE SHARE CRUD
+
+
+async def create_file_share(filepath: Path) -> FileShare:
+    file_share = FileShare(path=filepath)
+    await file_share.save()
+    return file_share
+
+
+async def get_file_share_by_uuid(share_uuid: UUID) -> FileShare:
+    return await FileShare.filter(uuid=share_uuid).get()
+
+
+async def delete_file_share(share_uuid: UUID):
+    await FileShare.filter(uuid=share_uuid).delete()

@@ -1,11 +1,12 @@
 from tortoise.fields.data import (BinaryField, BooleanField, CharField,
-                                  DatetimeField, IntEnumField, JSONField,
-                                  UUIDField)
+                                  DatetimeField, IntEnumField, IntField,
+                                  JSONField, UUIDField)
 from tortoise.fields.relational import (ForeignKeyField, ForeignKeyRelation,
                                         ReverseRelation)
 from tortoise.models import Model
 
 from ..helpers.constants import ContentChangeTypes
+from .custom_fields import PathField
 
 
 class ModifyMixin:
@@ -46,3 +47,18 @@ class ContentChange(Model):
         null=True
     )
     extra_meta = JSONField(null=True)
+
+
+class FileShare(Model):
+    """
+    a file that was shared
+
+        uuid: the primary key
+        path: the filepath
+        expires: when the link expires (or not)
+        uses_left: how many uses are left (if has use limit)
+    """
+    uuid = UUIDField(pk=True)
+    path = PathField()
+    expires = DatetimeField(null=True)
+    uses_left = IntField(null=True)

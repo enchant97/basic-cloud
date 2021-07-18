@@ -25,10 +25,11 @@ def create_root_path(
         root_path: Path,
         homes_path: Path,
         shared_path: Path,
-        username: str) -> Path:
+        username: str = None) -> Path:
 
-    if root_path.parts[0] != shared_path.name\
-            and root_path.parts[0:2] != (homes_path.name, username):
+    if ((root_path.parts[0] != shared_path.name) and
+            ((username is None and homes_path.name != root_path.parts[0]) or
+            (username is not None and root_path.parts[0:2] != (homes_path.name, username)))):
         raise PathNotExists("unknown root directory")
 
     parts = root_path.parts[1:]

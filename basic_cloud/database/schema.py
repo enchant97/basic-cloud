@@ -1,7 +1,9 @@
 from datetime import datetime
+from pathlib import Path
+from typing import Optional
+
 from pydantic import BaseModel
 from pydantic.types import UUID4
-from typing import Optional
 
 
 class ModifyBase(BaseModel):
@@ -30,3 +32,13 @@ class UserModifyAdmin(BaseModel):
 class Token(BaseModel):
     access_token: str
     token_type: str
+
+
+class FileShareCreate(BaseModel):
+    path: Path
+    expires: Optional[datetime]
+    users_left: Optional[int]
+
+
+class FileShare(FileShareCreate):
+    uuid: UUID4
