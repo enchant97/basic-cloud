@@ -1,4 +1,5 @@
 import base64
+import binascii
 import shutil
 from pathlib import Path
 from typing import List
@@ -8,7 +9,7 @@ from fastapi import (APIRouter, Body, Depends, HTTPException, WebSocket,
 from fastapi.responses import PlainTextResponse, StreamingResponse
 
 from ..config import get_settings
-from ..database import crud, models
+from ..database import crud, models, schema
 from ..helpers.auth import get_current_active_user, get_current_user
 from ..helpers.constants import ContentChangeTypes
 from ..helpers.exceptions import PathNotExists
@@ -52,6 +53,49 @@ async def get_directory_contents(
             detail="path must be a directory",
         )
     return relative_dir_contents(root_path)
+
+
+@router.get(
+    "/{folder_path}/history",
+    response_model=List[schema.ContentChange],
+    description="get history for folder")
+async def get_history_by_folder(
+        folder_path: str,
+        curr_user: models.User = Depends(get_current_active_user)):
+    try:
+        folder_path = base64.b64decode(folder_path).decode()
+        folder_path = Path(folder_path)
+
+        full_path = create_root_path(
+            folder_path,
+            get_settings().HOMES_PATH,
+            get_settings().SHARED_PATH,
+            curr_user.username,
+        )
+        if not full_path.exists():
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="directory must exist",
+            )
+
+        if not full_path.is_dir():
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="cannot be a file",
+            )
+        return await crud.get_content_changes_by_path(folder_path)
+
+    except PathNotExists:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="unknown root directory",
+        ) from None
+
+    except (ValueError, binascii.Error):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="malformed base64 filename"
+        ) from None
 
 
 @router.get(

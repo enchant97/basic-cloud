@@ -3,7 +3,9 @@ from pathlib import Path
 from typing import Optional
 
 from pydantic import BaseModel
-from pydantic.types import UUID4
+from pydantic.types import UUID4, Json
+
+from ..helpers.constants import ContentChangeTypes
 
 
 class ModifyBase(BaseModel):
@@ -32,6 +34,13 @@ class UserModifyAdmin(BaseModel):
 class Token(BaseModel):
     access_token: str
     token_type: str
+
+
+class ContentChange(BaseModel):
+    created_at: datetime
+    type_enum: ContentChangeTypes
+    triggered_by_id: Optional[UUID4]
+    extra_meta: Optional[Json]
 
 
 class FileShareCreate(BaseModel):

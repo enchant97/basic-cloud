@@ -160,6 +160,49 @@ async def upload_file_overwrite(
 
 
 @router.get(
+    "/{file_path}/history",
+    response_model=List[schema.ContentChange],
+    description="get history for file")
+async def get_history_by_file(
+        file_path: str,
+        curr_user: models.User = Depends(get_current_active_user)):
+    try:
+        file_path = base64.b64decode(file_path).decode()
+        file_path = Path(file_path)
+
+        full_path = create_root_path(
+            file_path,
+            get_settings().HOMES_PATH,
+            get_settings().SHARED_PATH,
+            curr_user.username,
+        )
+        if not full_path.exists():
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="directory/file must exist",
+            )
+
+        if not full_path.is_file():
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="cannot be a directory",
+            )
+        return await crud.get_content_changes_by_path(file_path)
+
+    except PathNotExists:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="unknown root directory",
+        ) from None
+
+    except (ValueError, binascii.Error):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="malformed base64 filename"
+        ) from None
+
+
+@router.get(
     "/{file_path}/shares",
     response_model=List[schema.FileShare],
     description="get the files public shares")
