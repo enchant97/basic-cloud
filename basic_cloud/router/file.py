@@ -282,12 +282,13 @@ async def create_file_share(
         file_share.expires,
         file_share.uses_left
     )
-    await crud.create_content_change(
-        file_share.path,
-        ContentChangeTypes.SHARED,
-        False,
-        curr_user
-    )
+    if get_settings().HISTORY_LOG:
+        await crud.create_content_change(
+            file_share.path,
+            ContentChangeTypes.SHARED,
+            False,
+            curr_user
+        )
     return created_row
 
 
