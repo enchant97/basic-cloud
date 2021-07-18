@@ -89,5 +89,9 @@ async def get_file_share_by_uuid(share_uuid: UUID) -> FileShare:
     return await FileShare.filter(uuid=share_uuid).get()
 
 
+async def get_shares_by_filepath(filepath: Path) -> List[FileShare]:
+    return await FileShare.filter(path=filepath).all()
+
+
 async def delete_file_share(share_uuid: UUID):
     await FileShare.filter(uuid=share_uuid).delete()

@@ -1,26 +1,23 @@
 """
 tortoise fields that are missing
 """
+from hashlib import sha256
 from pathlib import Path
 from typing import Any, Optional
 
-from tortoise.fields import BinaryField
+from tortoise.fields import CharField
 
 __all__ = (
-    "PathField",
+    "Sha256Field",
 )
 
 
-class PathField(BinaryField):
+class Sha256Field(CharField):
     """
-    Path Field
-
-    This field can store a pathlib.Path value
+    automatically hash the string when set
     """
-    def to_db_value(self, value: Any, _instance: "Union[Type[Model], Model]") -> Optional[str]:
-        return value and str(value).encode()
+    def __init__(self, **kwargs):
+        super().__init__(64, **kwargs)
 
-    def to_python_value(self, value: Any) -> Optional[Path]:
-        if value is None or isinstance(value, Path):
-            return value
-        return Path(value.decode())
+    def to_db_value(self, value: Any, _instance) -> Optional[str]:
+        return None if value is None else sha256(str(value).encode()).hexdigest()

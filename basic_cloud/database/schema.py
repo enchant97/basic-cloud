@@ -40,5 +40,7 @@ class FileShareCreate(BaseModel):
     uses_left: Optional[int]
 
 
-class FileShare(FileShareCreate):
+class FileShare(BaseModel):
     uuid: UUID4
+    expires: Optional[datetime]
+    uses_left: Optional[int]

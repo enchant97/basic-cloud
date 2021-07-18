@@ -6,7 +6,7 @@ from tortoise.fields.relational import (ForeignKeyField, ForeignKeyRelation,
 from tortoise.models import Model
 
 from ..helpers.constants import ContentChangeTypes
-from .custom_fields import PathField
+from .custom_fields import Sha256Field
 
 
 class ModifyMixin:
@@ -54,11 +54,11 @@ class FileShare(Model):
     a file that was shared
 
         uuid: the primary key
-        path: the filepath
+        path: the filepath (hashed)
         expires: when the link expires (or not)
         uses_left: how many uses are left (if has use limit)
     """
     uuid = UUIDField(pk=True)
-    path = PathField()
+    path = Sha256Field()
     expires = DatetimeField(null=True)
     uses_left = IntField(null=True)
