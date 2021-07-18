@@ -37,7 +37,7 @@ class Token(BaseModel):
 class FileShareCreate(BaseModel):
     path: Path
     expires: Optional[datetime]
-    users_left: Optional[int]
+    uses_left: Optional[int]
 
 
 class FileShare(FileShareCreate):

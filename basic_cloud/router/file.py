@@ -192,7 +192,7 @@ async def create_file_share(
     created_row = await crud.create_file_share(
         file_share.path,
         file_share.expires,
-        file_share.users_left
+        file_share.uses_left
     )
     return created_row
 
