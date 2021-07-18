@@ -26,8 +26,10 @@ class ContentChangeTypes(IntEnum):
         CREATION: a file/directory was created
         DELETION: a file/directory was deleted
         DOWNLOAD: a file/directory was downloaded
+        SHARED: a file/directory was shared
     """
     OTHER_CHANGE = 0
     CREATION = 1
     DELETION = 2
     DOWNLOAD = 3
+    SHARED = 4

@@ -38,7 +38,7 @@ class ContentChange(Model):
         extra_meta: any extra meta to store
     """
     created_at = DatetimeField(auto_now_add=True)
-    path_hash = BinaryField()
+    path_hash = Sha256Field()
     type_enum = IntEnumField(ContentChangeTypes)
     is_dir = BooleanField()
     triggered_by: ForeignKeyRelation[User] = ForeignKeyField(
