@@ -657,5 +657,11 @@ function process_create_account_details(username, password, password_conf) {
 }
 
 window.addEventListener("load", _ => {
+    // register required click events
+    document.getElementById("load-shares-bnt").addEventListener("click", go_to_shares);
+    document.getElementById("upload-file-bnt").addEventListener("click", upload_file);
+    document.getElementById("create-dir-bnt").addEventListener("click", create_dir);
+    document.getElementById("logoutBnt").addEventListener("click", do_logout);
+
     load_roots();
 });

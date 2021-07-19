@@ -1,10 +1,10 @@
 {% extends "/shared/base.html" %}
 {% block title %}The Cloud{% endblock %}
 {% block nav %}
-<button id="load-shares-bnt" onclick="go_to_shares();" disabled>Shares</button>
-<button id="upload-file-bnt" onclick="upload_file()" disabled>Upload File</button>
-<button id="create-dir-bnt" onclick="create_dir()" disabled>Create Directory</button>
-<button onclick="do_logout();">Logout</button>
+<button id="load-shares-bnt" disabled>Shares</button>
+<button id="upload-file-bnt" disabled>Upload File</button>
+<button id="create-dir-bnt" disabled>Create Directory</button>
+<button id="logoutBnt">Logout</button>
 {% endblock %}
 {% block main %}
 <h3 id="curr-directory"></h3>
