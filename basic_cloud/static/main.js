@@ -665,5 +665,8 @@ window.addEventListener("load", _ => {
     document.getElementById("create-dir-bnt").addEventListener("click", create_dir);
     document.getElementById("logoutBnt").addEventListener("click", do_logout);
 
-    load_roots();
+    // quick check for if a user has a token
+    // this prevents an unneeded request to API
+    if (get_stored_token() === null) { show_login_screen(); }
+    else { load_roots(); }
 });
