@@ -6,6 +6,41 @@ var POPUP_MESSAGE_TYPE_CLASS = {
     ERROR: "error",
 }
 
+/**
+ * Store button information.
+ * Used in the Popup class
+ */
+class ButtonChoice {
+    /**
+     * Create a button choice
+     * @param {string} caption - text to place on the button
+     * @param {Function} callback - callback when the button is clicked
+     * @param {any[]} callback_args - arguments to pass on click to the callback
+     * @param {boolean} is_disabled - whether the button is disabled
+     */
+    constructor(caption, callback, callback_args, is_disabled = false) {
+        this.caption = caption;
+        this.callback = callback;
+        this.callback_args = callback_args;
+        this.is_disabled = is_disabled;
+    }
+    /**
+     * create a button from values stored
+     * @param {Function} callback_on_click - a extra callback on click (used to delete popup)
+     * @returns the created button
+     */
+    create_button(callback_on_click) {
+        const button = document.createElement("button");
+        button.innerText = this.caption;
+        button.addEventListener("click", _ => {
+            this.callback(...this.callback_args);
+            callback_on_click();
+        });
+        if (this.is_disabled){ button.setAttribute("disabled", true); };
+        return button;
+    }
+}
+
 class Popup {
     /**
      * add a popup to the document body
@@ -95,7 +130,7 @@ class Popup {
         const ok_button = document.createElement("button");
         const create_account_button = document.createElement("button");
 
-        content_element.classList.add("down");
+        content_element.classList.add("down", "gaps");
         title_element.innerText = title;
         caption_element.innerText = caption;
         username_label.innerText = "Username";
@@ -165,7 +200,7 @@ class Popup {
         const ok_button = document.createElement("button");
         const login_button = document.createElement("button");
 
-        content_element.classList.add("down");
+        content_element.classList.add("down", "gaps");
         title_element.innerText = title;
         caption_element.innerText = caption;
         username_label.innerText = "Username"
@@ -214,5 +249,38 @@ class Popup {
 
         return popup;
     }
+    /**
+     * append a selection popup that the user can select from many buttons
+     * @param {string} title - the pop-up title
+     * @param {string} caption - the pop-up caption
+     * @param {ButtonChoice[]} button_choices - the buttons to place
+     * @param {boolean} cancelable - whether user can close popup
+     */
+    static append_selection(title, caption, button_choices, cancelable = true) {
+        const content_element = document.createElement("div");
+        const title_element = document.createElement("h3");
+        const caption_element = document.createElement("p");
+        const close_bnt = document.createElement("button");
 
+        content_element.classList.add("down", "gaps");
+        title_element.innerText = title;
+        caption_element.innerText = caption;
+        close_bnt.innerText = "Close";
+
+        if (!cancelable) {
+            close_bnt.setAttribute("disabled", true);
+        }
+
+        const popup = this.append_base(content_element);
+
+        content_element.append(title_element);
+        content_element.append(caption_element);
+        button_choices.forEach(button_choice => {
+            content_element.append(button_choice.create_button(() => { popup.remove(); }));
+        });
+        content_element.append(close_bnt);
+        close_bnt.addEventListener("click", _ => { popup.remove(); });
+
+        return popup;
+    }
 }

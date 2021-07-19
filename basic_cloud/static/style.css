@@ -163,6 +163,10 @@ main div#files-and-dirs button {
     word-break: break-all;
 }
 
+.down.gaps {
+    gap: 4px;
+}
+
 .popup {
     z-index: 90;
     position: fixed;
@@ -180,6 +184,7 @@ main div#files-and-dirs button {
     border-radius: var(--border-radius);
     border: 3px solid var(--border-col);
     background-color: var(--bg-body);
+    padding: 10px;
 }
 
 .loading {

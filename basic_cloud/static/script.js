@@ -34,6 +34,7 @@ class FileDirRow {
     constructor(path, name) {
         this.name = name;
         this.path = path;
+        this.button_choices = [];
 
         this.create_elements();
         this.set_names();
@@ -43,17 +44,16 @@ class FileDirRow {
         this.name_elem = document.createElement("button");
         this.delete_bnt_elem = document.createElement("button");
         this.download_bnt_elem = document.createElement("button");
+        this.more_options_elem = document.createElement("button");
     }
     set_names() {
         this.name_elem.innerText = this.name;
         this.delete_bnt_elem.innerText = "×";
         this.download_bnt_elem.innerText = "Download";
-    }
-    disable_edit() {
-        this.delete_bnt_elem.setAttribute("disabled", true);
-    }
-    disable_download() {
-        this.download_bnt_elem.setAttribute("disabled", true);
+        this.more_options_elem.innerText = "≡";
+        this.more_options_elem.addEventListener("click", _ => {
+            Popup.append_selection("More Options", this.path, this.button_choices);
+        });
     }
     add_dir_root_navigate() {
         this.name_elem.addEventListener("click", _ => {
@@ -79,18 +79,17 @@ class FileDirRow {
         this.download_bnt_elem.addEventListener("click", _ => { start_download_zip(this.path) });
     }
     make_file_row(edit_allowed = true) {
-        if (!edit_allowed) { this.disable_edit(); }
-        else {
-            this.delete_bnt_elem.addEventListener("click", _ => { fetch_rmfile(this.path) });
+        if (edit_allowed) {
+            this.button_choices.push(new ButtonChoice("Delete", fetch_rmfile, [this.path]));
         }
         this.download_bnt_elem.addEventListener("click", _ => { start_download_file(this.path) });
     }
     make_dir_row_rm() {
-        this.delete_bnt_elem.addEventListener("click", _ => { fetch_rmdir(this.path) });
+        this.button_choices.push(new ButtonChoice("Delete", fetch_rmdir, [this.path]));
     }
     make_up_dir_row() {
-        this.disable_edit();
-        this.disable_download();
+        this.download_bnt_elem.setAttribute("disabled", true);
+        this.more_options_elem.setAttribute("disabled", true);
         // if path is null then it must be "root"
         if (this.path === null) {
             this.add_dir_root_navigate();
@@ -100,20 +99,21 @@ class FileDirRow {
         }
     }
     make_dir_row(edit_allowed = true) {
-        if (!edit_allowed) { this.disable_edit(); }
-        else { this.make_dir_row_rm(); }
+        if (edit_allowed) {
+            this.button_choices.push(new ButtonChoice("Delete", fetch_rmdir, [this.path]));
+        }
         this.add_dir_zip_download();
         this.add_dir_navigate();
     }
     make_dir_root_row() {
-        this.disable_edit();
         this.add_dir_zip_download();
         this.add_dir_dir_navigate();
+        this.more_options_elem.setAttribute("disabled", true);
     }
     append_elements(parent) {
         parent.append(this.icon_elem);
         parent.append(this.name_elem);
-        parent.append(this.delete_bnt_elem);
+        parent.append(this.more_options_elem);
         parent.append(this.download_bnt_elem);
     }
 }
