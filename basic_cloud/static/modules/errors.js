@@ -2,7 +2,7 @@
  * when the login fails
  * (either incorrect username or password)
  */
-class InvalidLoginError {
+export class InvalidLoginError {
     constructor(message) {
         this.name = 'InvalidLoginError';
         this.message = message || '';

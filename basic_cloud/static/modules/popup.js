@@ -1,6 +1,4 @@
-"use strict";
-
-var POPUP_MESSAGE_TYPE_CLASS = {
+export var POPUP_MESSAGE_TYPE_CLASS = {
     INFO: "info",
     WARNING: "warning",
     ERROR: "error",
@@ -10,7 +8,7 @@ var POPUP_MESSAGE_TYPE_CLASS = {
  * Store button information.
  * Used in the Popup class
  */
-class ButtonChoice {
+export class ButtonChoice {
     /**
      * Create a button choice
      * @param {string} caption - text to place on the button
@@ -41,7 +39,7 @@ class ButtonChoice {
     }
 }
 
-class Popup {
+export default class Popup {
     /**
      * add a popup to the document body
      * @param {Element} popup_content - the popup content

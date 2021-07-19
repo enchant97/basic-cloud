@@ -1,4 +1,6 @@
-"use strict";
+import { InvalidLoginError } from "./modules/errors.js";
+import * as helpers from "./modules/helpers.js";
+import Popup, { POPUP_MESSAGE_TYPE_CLASS, ButtonChoice } from "./modules/popup.js";
 
 const TOKEN_KEY = "token";
 const USERNAME_KEY = "username";
@@ -404,8 +406,8 @@ function start_download_zip(directory) {
     fetch_download_zip(directory)
         .then(blob => {
             const url = URL.createObjectURL(blob);
-            const filename = path_to_filename(directory)
-            download(url, filename);
+            const filename = helpers.path_to_filename(directory)
+            helpers.download(url, filename);
             URL.revokeObjectURL(url);
         });
 }
@@ -431,11 +433,11 @@ async function fetch_download_file(file_path) {
  * @param {string} file_path - path of file to download
  */
 function start_download_file(file_path) {
-    const filename = path_to_filename(file_path);
+    const filename = helpers.path_to_filename(file_path);
     fetch_download_file(file_path)
         .then(blob => {
             const url = URL.createObjectURL(blob);
-            download(url, filename);
+            helpers.download(url, filename);
             URL.revokeObjectURL(url);
         });
 }
@@ -572,17 +574,17 @@ function do_logout() {
  */
 async function load_roots() {
     const files_and_dirs = document.getElementById("files-and-dirs");
-    const loading_element = add_spin_loader(files_and_dirs);
+    const loading_element = helpers.add_spin_loader(files_and_dirs);
     const roots = await fetch_root_dirs();
 
-    delete_children(files_and_dirs);
+    helpers.delete_children(files_and_dirs);
     append_directory_root_row_element(files_and_dirs, roots.shared, roots.shared);
     append_directory_root_row_element(files_and_dirs, roots.home, roots.home);
     update_curr_dir_status("");
     curr_dir = null;
     document.getElementById("upload-file-bnt").setAttribute("disabled", true);
     document.getElementById("create-dir-bnt").setAttribute("disabled", true);
-    remove_spin_loader(files_and_dirs, loading_element);
+    helpers.remove_spin_loader(files_and_dirs, loading_element);
 }
 
 /**
@@ -591,10 +593,10 @@ async function load_roots() {
  */
 async function change_directory(new_directory) {
     const files_and_dirs = document.getElementById("files-and-dirs");
-    const loading_element = add_spin_loader(files_and_dirs);
+    const loading_element = helpers.add_spin_loader(files_and_dirs);
     const dir_content = await fetch_dir_content(new_directory);
 
-    delete_children(files_and_dirs);
+    helpers.delete_children(files_and_dirs);
 
     if (curr_dir === null || directory_at_root(new_directory)) {
         append_directory_up_row_element(files_and_dirs, null, "..");
@@ -617,7 +619,7 @@ async function change_directory(new_directory) {
     document.getElementById("upload-file-bnt").removeAttribute("disabled");
     document.getElementById("create-dir-bnt").removeAttribute("disabled");
     update_curr_dir_status(new_directory.replace("\\", "/"));
-    remove_spin_loader(files_and_dirs, loading_element);
+    helpers.remove_spin_loader(files_and_dirs, loading_element);
 }
 
 /**

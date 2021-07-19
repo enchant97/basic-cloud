@@ -3,7 +3,7 @@
  * @param {String} file_path - the filepath to convert
  * @returns the filename
  */
-function path_to_filename(file_path) {
+export function path_to_filename(file_path) {
     // convert windows filepath to unix/linux style
     file_path = file_path.replace("\\", "/");
 
@@ -18,7 +18,7 @@ function path_to_filename(file_path) {
  * delete a parents children
  * @param {Element} elem - the parent element
  */
-function delete_children(parent) {
+export function delete_children(parent) {
     while (parent.hasChildNodes()) {
         parent.removeChild(parent.lastChild);
     }
@@ -28,7 +28,7 @@ function delete_children(parent) {
  * @param {string} href - the href to download from
  * @param {string} filename - the filename of the download
  */
-function download(href, filename) {
+export function download(href, filename) {
     const a_elem = document.createElement("a");
     a_elem.href = href;
     a_elem.setAttribute("download", filename);
@@ -41,7 +41,7 @@ function download(href, filename) {
  * @param {Element} target_element - the element that is being loaded
  * @returns the loading element
  */
-function add_spin_loader(target_element) {
+export function add_spin_loader(target_element) {
     const loading_element = document.createElement("div");
     const spinning_element = document.createElement("div");
     const label_element = document.createElement("strong");
@@ -63,7 +63,7 @@ function add_spin_loader(target_element) {
  * @param {Element} target_element - the element that has finished loaded
  * @param {Element} loading_element - the element showing loading
  */
-function remove_spin_loader(target_element, loading_element) {
+export function remove_spin_loader(target_element, loading_element) {
     target_element.style = null;
     loading_element.remove();
 }
