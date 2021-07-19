@@ -74,4 +74,145 @@ class Popup {
         content_element.append(loader_element);
         return this.append_base(content_element);
     }
+    /**
+     * appends a popup for providing login details
+     * @param {string} title - the pop-up title
+     * @param {string} description - the pop-up description
+     * @param {function} login_handler - callback for when details have been provided
+     * @param {function} create_account_handler - callback for when user wants to create an account
+     * @returns the popup element
+     */
+    static append_login(title, caption, login_handler, create_account_handler) {
+        const content_element = document.createElement("div");
+        const title_element = document.createElement("h3");
+        const caption_element = document.createElement("p");
+        const username_label = document.createElement("label");
+        const username_element = document.createElement("input");
+        const password_label = document.createElement("label");
+        const password_element = document.createElement("input");
+        const rememberme_label = document.createElement("label");
+        const rememberme_element = document.createElement("input")
+        const ok_button = document.createElement("button");
+        const create_account_button = document.createElement("button");
+
+        content_element.classList.add("down");
+        title_element.innerText = title;
+        caption_element.innerText = caption;
+        username_label.innerText = "Username";
+        username_label.for = "username";
+        username_element.type = "text";
+        username_element.id = "username";
+        username_element.placeholder = "Username...";
+        password_label.innerText = "Password"
+        password_label.for = "password";
+        password_element.type = "password";
+        password_element.id = "password"
+        password_element.placeholder = "Password...";
+        rememberme_label.innerText = "Remember Me"
+        rememberme_label.for = "rememberme";
+        rememberme_element.id = "rememberme";
+        rememberme_element.type = "checkbox";
+        ok_button.innerText = "Login";
+        create_account_button.innerText = "Create Account";
+
+
+        content_element.append(title_element);
+        content_element.append(caption_element);
+        content_element.append(username_label);
+        content_element.append(username_element);
+        content_element.append(password_label);
+        content_element.append(password_element);
+        content_element.append(rememberme_label);
+        content_element.append(rememberme_element);
+        content_element.append(ok_button);
+        content_element.append(create_account_button);
+
+        const popup = this.append_base(content_element);
+
+        ok_button.addEventListener("click", _ => {
+            login_handler(
+                username_element.value,
+                password_element.value,
+                rememberme_element.checked
+            )
+            popup.remove();
+        });
+        create_account_button.addEventListener("click", _ => {
+            create_account_handler();
+            popup.remove();
+        });
+
+        return popup;
+    }
+    /**
+     * appends a popup for providing account creation details
+     * @param {string} title - the pop-up title
+     * @param {string} description - the pop-up description
+     * @param {function} create_account_handler - callback for when details have been provided
+     * @param {function} login_handler - callback for when user wants to login
+     * @returns the popup element
+     */
+    static append_create_account(title, caption, create_account_handler, login_handler) {
+        const content_element = document.createElement("div");
+        const title_element = document.createElement("h3");
+        const caption_element = document.createElement("p");
+        const username_label = document.createElement("label");
+        const username_element = document.createElement("input");
+        const password_label = document.createElement("label");
+        const password_element = document.createElement("input");
+        const password_confirm_label = document.createElement("label");
+        const password_confirm_element = document.createElement("input");
+        const ok_button = document.createElement("button");
+        const login_button = document.createElement("button");
+
+        content_element.classList.add("down");
+        title_element.innerText = title;
+        caption_element.innerText = caption;
+        username_label.innerText = "Username"
+        username_label.for = "username";
+        username_element.type = "text";
+        username_element.id = "username";
+        username_element.placeholder = "Username...";
+        password_label.innerText = "Password";
+        password_label.for = "password";
+        password_element.type = "password";
+        password_element.id = "password"
+        password_confirm_label.innerText = "Password Confirm";
+        password_confirm_label.for = "password-confirm";
+        password_element.placeholder = "Password...";
+        password_confirm_element.type = "password";
+        password_confirm_element.id = "password-confirm";
+        password_confirm_element.placeholder = "Password Confirm...";
+        ok_button.innerText = "Create Account";
+        login_button.innerText = "Login";
+
+        content_element.append(title_element);
+        content_element.append(caption_element);
+        content_element.append(username_label);
+        content_element.append(username_element);
+        content_element.append(password_label);
+        content_element.append(password_element);
+        content_element.append(password_confirm_label);
+        content_element.append(password_confirm_element);
+        content_element.append(ok_button);
+        content_element.append(login_button);
+
+        const popup = this.append_base(content_element);
+
+        ok_button.addEventListener("click", _ => {
+            create_account_handler(
+                username_element.value,
+                password_element.value,
+                password_confirm_element.value
+            )
+            popup.remove();
+        });
+        login_button.addEventListener("click", _ => {
+            login_handler();
+            popup.remove();
+        });
+
+        return popup;
+    }
+
 }

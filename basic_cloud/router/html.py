@@ -14,17 +14,3 @@ async def get_home(request: Request):
     return TEMPLATES.TemplateResponse("home.html", {
         'request': request,
     })
-
-
-@router.get("/login")
-async def get_login(request: Request):
-    return TEMPLATES.TemplateResponse("login.html", {
-        'request': request,
-    })
-
-
-@router.get("/create-account")
-async def get_create_account(request: Request):
-    return TEMPLATES.TemplateResponse("create_account.html", {
-        'request': request,
-    })

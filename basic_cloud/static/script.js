@@ -6,10 +6,24 @@ const USERNAME_KEY = "username";
 var curr_dir;
 
 /**
- * redirect to the login page
+ * show login screen
  */
-function navigate_to_login() {
-    window.location.href = "/login";
+function show_login_screen() {
+    Popup.append_login(
+        "Please Login",
+        "Login is required for this service",
+        process_login_details,
+        show_create_account_screen
+    );
+}
+
+function show_create_account_screen() {
+    Popup.append_create_account(
+        "Create Account",
+        "A strong password is recommended.",
+        process_create_account_details,
+        show_login_screen
+    );
 }
 
 /**
@@ -282,7 +296,7 @@ async function fetch_dir_content(directory) {
             headers: get_auth_headers(),
         }
     );
-    if (resp.status === 401) { navigate_to_login(); }
+    if (resp.status === 401) { show_login_screen(); }
     return await resp.json();
 }
 
@@ -297,7 +311,7 @@ async function fetch_root_dirs() {
             headers: get_auth_headers(),
         }
     );
-    if (resp.status === 401) { navigate_to_login(); }
+    if (resp.status === 401) { show_login_screen(); }
     return await resp.json();
 }
 /**
@@ -311,7 +325,7 @@ async function fetch_rmfile(file_path) {
             body: JSON.stringify({ file_path }),
             headers: get_auth_headers(),
         });
-    if (resp.status === 401) { navigate_to_login(); }
+    if (resp.status === 401) { show_login_screen(); }
     if (!resp.ok) { throw new Error(resp.status) }
     return await resp.text();
 }
@@ -327,7 +341,7 @@ async function fetch_upload_file(form_data) {
             body: form_data,
             headers: get_auth_headers(null),
         });
-    if (resp.status === 401) { navigate_to_login(); }
+    if (resp.status === 401) { show_login_screen(); }
     if (!resp.ok) { throw new Error(resp.status) }
     const json_data = await resp.json();
     return json_data;
@@ -346,7 +360,7 @@ async function fetch_mkdir(directory, name) {
             body: JSON.stringify({ directory, name }),
             headers: get_auth_headers(),
         });
-    if (resp.status === 401) { navigate_to_login(); }
+    if (resp.status === 401) { show_login_screen(); }
     if (!resp.ok) { throw new Error(resp.status) }
     return await resp.text();
 }
@@ -361,7 +375,7 @@ async function fetch_rmdir(directory) {
             body: JSON.stringify({ directory }),
             headers: get_auth_headers(),
         });
-    if (resp.status === 401) { navigate_to_login(); }
+    if (resp.status === 401) { show_login_screen(); }
     if (!resp.ok) { throw new Error(resp.status) }
     return await resp.text();
 }
@@ -378,7 +392,7 @@ async function fetch_download_zip(directory) {
             method: "GET",
             headers: get_auth_headers("text/plain"),
         });
-    if (resp.status === 401) { navigate_to_login(); }
+    if (resp.status === 401) { show_login_screen(); }
     if (!resp.ok) { throw new Error(resp.status) }
     return await resp.blob();
 }
@@ -408,7 +422,7 @@ async function fetch_download_file(file_path) {
             method: "GET",
             headers: get_auth_headers("text/plain"),
         });
-    if (resp.status === 401) { navigate_to_login(); }
+    if (resp.status === 401) { show_login_screen(); }
     if (!resp.ok) { throw new Error(resp.status) }
     return await resp.blob();
 }
@@ -550,7 +564,7 @@ async function do_login(username, password, rememberme) {
 function do_logout() {
     remove_token();
     remove_username();
-    navigate_to_login();
+    show_login_screen();
 }
 
 /**
@@ -609,40 +623,29 @@ async function change_directory(new_directory) {
 /**
  * handle the login form being submitted
  */
-function handle_login_form() {
-    const username = document.getElementById("username");
-    const password = document.getElementById("password");
-    const rememberme = document.getElementById("rememberme");
-
-    do_login(username.value, password.value, rememberme.checked)
+function process_login_details(username, password, rememberme) {
+    do_login(username, password, rememberme)
         .then(_ => {
-            window.location.href = "/";
+            load_roots();
         }).catch(err => {
             if (err instanceof InvalidLoginError) {
-                password.value = "";
                 alert(err.message);
-                password.focus();
             }
             else { throw err; }
         });
 }
 
-function handle_create_account_form() {
-    const username = document.getElementById("username");
-    const password = document.getElementById("password");
-    const password_conf = document.getElementById("password-conf");
-    if (password.value !== password_conf.value) {
+function process_create_account_details(username, password, password_conf) {
+    if (password !== password_conf) {
         Popup.append_message(
             "User Creation Error",
             "passwords do not match",
             POPUP_MESSAGE_TYPE_CLASS.ERROR
         );
-        password_conf.value = "";
-        password_conf.focus();
     }
     else {
-        fetch_create_account(username.value, password.value)
-            .then(_ => { navigate_to_login() })
+        fetch_create_account(username, password)
+            .then(_ => { show_login_screen() })
             .catch(err => {
                 Popup.append_message(
                     "User Creation Error",
@@ -652,3 +655,7 @@ function handle_create_account_form() {
             });
     }
 }
+
+window.addEventListener("load", _ => {
+    load_roots();
+});
