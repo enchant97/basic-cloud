@@ -481,8 +481,12 @@ function process_login_details(username, password, rememberme) {
         })
         .catch(err => {
             if (err instanceof api_errors.AuthError) {
-                alert("incorrect username or password");
-                show_login_screen();
+                Popup.append_message(
+                    "Login Failed",
+                    "username or password incorrect!",
+                    POPUP_MESSAGE_TYPE_CLASS.ERROR,
+                    show_login_screen
+                );
             }
             else { throw err; }
         });
@@ -500,11 +504,28 @@ function process_create_account_details(username, password, password_conf) {
         BasicCloudApi.post_create_account(username, password)
             .then(_ => { show_login_screen() })
             .catch(err => {
-                Popup.append_message(
-                    "User Creation Error",
-                    "error: " + err.message,
-                    POPUP_MESSAGE_TYPE_CLASS.ERROR
-                );
+                if (err instanceof api_errors.BadRequest) {
+                    Popup.append_message(
+                        "User Creation Failed",
+                        "fields given not acceptable",
+                        POPUP_MESSAGE_TYPE_CLASS.ERROR,
+                        show_create_account_screen);
+                }
+                else if (err instanceof api_errors.AuthError) {
+                    Popup.append_message(
+                        "User Creation Failed",
+                        "account creation is currently disabled",
+                        POPUP_MESSAGE_TYPE_CLASS.ERROR,
+                        show_login_screen);
+                }
+                else {
+                    Popup.append_message(
+                        "User Creation Failed",
+                        "error: " + err.message,
+                        POPUP_MESSAGE_TYPE_CLASS.ERROR,
+                        show_create_account_screen
+                    );
+                }
             });
     }
 }

@@ -62,9 +62,10 @@ export default class Popup {
      * @param {string} title - the pop-up title
      * @param {string} description - the pop-up description
      * @param {string} type - the type of message
+     * @param {Function} ok_callback - called when the user has pressed ok
      * @returns the popup element
      */
-    static append_message(title, description, type = POPUP_MESSAGE_TYPE_CLASS.INFO) {
+    static append_message(title, description, type = POPUP_MESSAGE_TYPE_CLASS.INFO, ok_callback = null) {
         const content_element = document.createElement("div");
         const title_element = document.createElement("h3");
         const desc_element = document.createElement("p");
@@ -81,8 +82,10 @@ export default class Popup {
 
         const popup = this.append_base(content_element);
 
-        ok_button.addEventListener("click", _ => { popup.remove(); });
-
+        ok_button.addEventListener("click", _ => {
+            popup.remove();
+            ok_callback?.();
+        });
         return popup;
     }
     /**

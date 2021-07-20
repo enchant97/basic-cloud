@@ -12,6 +12,8 @@ export default class BasicCloudApi {
      */
     static handle_known_http_errors(response) {
         switch (response.status) {
+            case 400:
+                throw new api_errors.BadRequest(response.statusText);
             case 401:
                 throw new api_errors.AuthError(response.status.statusText);
             case 422:

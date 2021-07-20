@@ -10,6 +10,17 @@ export class UnhandledError {
 }
 
 /**
+ * when server cannot process request
+ */
+export class BadRequest {
+    constructor(message) {
+        this.name = 'BadRequest';
+        this.message = message || '';
+        this.stack = (new UnhandledError).stack;
+    }
+}
+
+/**
  * when access token doesn't work
  */
 export class AuthError {
