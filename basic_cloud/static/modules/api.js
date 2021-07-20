@@ -17,6 +17,9 @@ export default class BasicCloudApi {
             case 422:
                 // this may indicate the API is not compatible with current version
                 throw new api_errors.UnprocessableError(response.statusText);
+            case 500:
+                // the server is broken :(
+                throw new api_errors.InternalServerError(response.statusText);
             default:
                 throw new api_errors.UnhandledError(response.status);
         }

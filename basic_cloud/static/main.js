@@ -61,13 +61,21 @@ class FileDirRow {
     add_dir_root_navigate() {
         this.name_elem.addEventListener("click", _ => {
             document.getElementById("load-shares-bnt").setAttribute("disabled", true);
-            load_roots();
+            load_roots()
+                .catch (err => {
+                    if (err instanceof api_errors.AuthError) { show_login_screen(); }
+                    else { throw err; }
+                });
         });
     }
     add_dir_dir_navigate() {
         this.name_elem.addEventListener("click", _ => {
             document.getElementById("load-shares-bnt").removeAttribute("disabled");
-            change_directory(this.path);
+            change_directory(this.path)
+                .catch(err => {
+                    if (err instanceof api_errors.AuthError) { show_login_screen(); }
+                    else{ throw err; }
+                });
         });
     }
     add_dir_navigate() {
@@ -252,6 +260,12 @@ function start_download_zip(directory) {
             const filename = helpers.path_to_filename(directory)
             helpers.download(url, filename);
             URL.revokeObjectURL(url);
+        })
+        .catch (err => {
+        if (err instanceof api_errors.AuthError) {
+            show_login_screen();
+        }
+        else { throw err; }
         });
 }
 /**
@@ -265,6 +279,12 @@ function start_download_file(file_path) {
             const url = URL.createObjectURL(blob);
             helpers.download(url, filename);
             URL.revokeObjectURL(url);
+        })
+        .catch(err => {
+            if (err instanceof api_errors.AuthError) {
+                show_login_screen();
+            }
+            else { throw err; }
         });
 }
 function handle_file_upload(file_elem) {
@@ -327,12 +347,17 @@ function create_dir() {
                     );
                     change_directory(curr_dir);
                 })
-                .catch(_err => {
-                    Popup.append_message(
+                .catch(err => {
+                    if (err instanceof api_errors.AuthError) {
+                        show_login_screen();
+                    }
+                    else {
+                        Popup.append_message(
                         "Directory Creation Error",
                         "unhandled error",
                         POPUP_MESSAGE_TYPE_CLASS.ERROR
-                    );
+                        );
+                     }
                 });
         }
         else {
@@ -391,16 +416,20 @@ function do_logout() {
 async function load_roots() {
     const files_and_dirs = document.getElementById("files-and-dirs");
     const loading_element = helpers.add_spin_loader(files_and_dirs);
-    const roots = await BasicCloudApi.get_directory_roots();
+    try {
+        const roots = await BasicCloudApi.get_directory_roots();
 
-    helpers.delete_children(files_and_dirs);
-    append_directory_root_row_element(files_and_dirs, roots.shared, roots.shared);
-    append_directory_root_row_element(files_and_dirs, roots.home, roots.home);
-    update_curr_dir_status("");
-    curr_dir = null;
-    document.getElementById("upload-file-bnt").setAttribute("disabled", true);
-    document.getElementById("create-dir-bnt").setAttribute("disabled", true);
-    helpers.remove_spin_loader(files_and_dirs, loading_element);
+        helpers.delete_children(files_and_dirs);
+        append_directory_root_row_element(files_and_dirs, roots.shared, roots.shared);
+        append_directory_root_row_element(files_and_dirs, roots.home, roots.home);
+        update_curr_dir_status("");
+        curr_dir = null;
+        document.getElementById("upload-file-bnt").setAttribute("disabled", true);
+        document.getElementById("create-dir-bnt").setAttribute("disabled", true);
+    }
+    finally {
+        helpers.remove_spin_loader(files_and_dirs, loading_element);
+    }
 }
 
 /**
@@ -410,32 +439,36 @@ async function load_roots() {
 async function change_directory(new_directory) {
     const files_and_dirs = document.getElementById("files-and-dirs");
     const loading_element = helpers.add_spin_loader(files_and_dirs);
-    const dir_content = await BasicCloudApi.post_directory_content(new_directory);
+    try {
+        const dir_content = await BasicCloudApi.post_directory_content(new_directory);
 
-    helpers.delete_children(files_and_dirs);
+        helpers.delete_children(files_and_dirs);
 
-    if (curr_dir === null || directory_at_root(new_directory)) {
-        append_directory_up_row_element(files_and_dirs, null, "..");
-    }
-    else {
-        append_directory_up_row_element(files_and_dirs, get_parent_dir(new_directory), "..");
-    }
-
-    dir_content.forEach(path_content => {
-        const path_name = path_content.name;
-        const combined_path = new_directory + "/" + path_name;
-        if (path_content.meta.is_directory) {
-            append_directory_row_element(files_and_dirs, combined_path, path_name);
+        if (curr_dir === null || directory_at_root(new_directory)) {
+            append_directory_up_row_element(files_and_dirs, null, "..");
         }
         else {
-            append_file_row_element(files_and_dirs, combined_path, path_name);
+            append_directory_up_row_element(files_and_dirs, get_parent_dir(new_directory), "..");
         }
-    });
-    curr_dir = new_directory;
-    document.getElementById("upload-file-bnt").removeAttribute("disabled");
-    document.getElementById("create-dir-bnt").removeAttribute("disabled");
-    update_curr_dir_status(new_directory.replace("\\", "/"));
-    helpers.remove_spin_loader(files_and_dirs, loading_element);
+
+        dir_content.forEach(path_content => {
+            const path_name = path_content.name;
+            const combined_path = new_directory + "/" + path_name;
+            if (path_content.meta.is_directory) {
+                append_directory_row_element(files_and_dirs, combined_path, path_name);
+            }
+            else {
+                append_file_row_element(files_and_dirs, combined_path, path_name);
+            }
+        });
+        curr_dir = new_directory;
+        document.getElementById("upload-file-bnt").removeAttribute("disabled");
+        document.getElementById("create-dir-bnt").removeAttribute("disabled");
+        update_curr_dir_status(new_directory.replace("\\", "/"));
+    }
+    finally {
+        helpers.remove_spin_loader(files_and_dirs, loading_element);
+    }
 }
 
 /**
@@ -445,9 +478,11 @@ function process_login_details(username, password, rememberme) {
     do_login(username, password, rememberme)
         .then(_ => {
             load_roots();
-        }).catch(err => {
+        })
+        .catch(err => {
             if (err instanceof api_errors.AuthError) {
-                alert(err.message);
+                alert("incorrect username or password");
+                show_login_screen();
             }
             else { throw err; }
         });
@@ -489,6 +524,11 @@ window.addEventListener("load", _ => {
             token_type: "bearer",
             access_token: get_stored_token()
         };
-        load_roots();
+        load_roots().catch(err => {
+            if (err instanceof api_errors.AuthError) {
+                show_login_screen();
+            }
+            else { throw err; }
+        });
     }
 });

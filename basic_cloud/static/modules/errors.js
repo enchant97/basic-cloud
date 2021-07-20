@@ -3,7 +3,7 @@
  */
 export class UnhandledError {
     constructor(message) {
-        this.name = 'ApiHttpError';
+        this.name = 'UnhandledError';
         this.message = message || '';
         this.stack = (new Error()).stack;
     }
@@ -14,9 +14,9 @@ export class UnhandledError {
  */
 export class AuthError {
     constructor(message) {
-        this.name = 'ApiAuthError';
+        this.name = 'AuthError';
         this.message = message || '';
-        this.stack = (new ApiHttpError).stack;
+        this.stack = (new UnhandledError).stack;
     }
 }
 
@@ -27,6 +27,17 @@ export class UnprocessableError {
     constructor(message) {
         this.name = 'UnprocessableError';
         this.message = message || '';
-        this.stack = (new ApiHttpError).stack;
+        this.stack = (new UnhandledError).stack;
+    }
+}
+
+/**
+ * when server fails
+ */
+export class InternalServerError {
+    constructor(message) {
+        this.name = 'InternalServerError';
+        this.message = message || '';
+        this.stack = (new UnhandledError).stack;
     }
 }
