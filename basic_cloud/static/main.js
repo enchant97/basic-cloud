@@ -12,6 +12,7 @@ var curr_dir;
  * show login screen
  */
 function show_login_screen() {
+    show_blank_screen();
     Popup.append_login(
         "Please Login",
         "Login is required for this service",
@@ -20,6 +21,9 @@ function show_login_screen() {
     );
 }
 
+/**
+ * show the account creation screen
+ */
 function show_create_account_screen() {
     Popup.append_create_account(
         "Create Account",
@@ -27,6 +31,62 @@ function show_create_account_screen() {
         process_create_account_details,
         show_login_screen
     );
+}
+
+/**
+ * remove all elements from screen
+ * (this will be shown once logged out)
+ */
+function show_blank_screen() {
+    const navbar = document.querySelector("header nav");
+    const main = document.querySelector("main");
+
+    helpers.delete_children(navbar);
+    helpers.delete_children(main);
+}
+
+/**
+ * show the main screen
+ * (this will be shown after login)
+ */
+function show_main_screen() {
+    const navbar = document.querySelector("header nav");
+    const main = document.querySelector("main");
+
+    helpers.delete_children(navbar);
+    helpers.delete_children(main);
+
+    const load_shares_bnt = document.createElement("button");
+    const upload_file_bnt = document.createElement("button");
+    const create_dir_bnt = document.createElement("button");
+    const logout_bnt = document.createElement("button");
+    const curr_dir_label = document.createElement("h3");
+    const files_and_dirs_container = document.createElement("div");
+
+    load_shares_bnt.innerText = "Shares";
+    load_shares_bnt.setAttribute("disabled", true);
+    load_shares_bnt.id = "load-shares-bnt";
+    load_shares_bnt.addEventListener("click", go_to_shares);
+    upload_file_bnt.innerText = "Upload File";
+    upload_file_bnt.setAttribute("disabled", true);
+    upload_file_bnt.id = "upload-file-bnt";
+    upload_file_bnt.addEventListener("click", upload_file);
+    create_dir_bnt.innerText = "Create Directory";
+    create_dir_bnt.setAttribute("disabled", true);
+    create_dir_bnt.id = "create-dir-bnt";
+    create_dir_bnt.addEventListener("click", create_dir);
+    logout_bnt.innerText = "Logout";
+    logout_bnt.addEventListener("click", do_logout);
+
+    curr_dir_label.id = "curr-directory";
+    files_and_dirs_container.id = "files-and-dirs";
+
+    navbar.append(load_shares_bnt);
+    navbar.append(upload_file_bnt);
+    navbar.append(create_dir_bnt);
+    navbar.append(logout_bnt);
+    main.append(curr_dir_label);
+    main.append(files_and_dirs_container);
 }
 
 /**
@@ -477,7 +537,13 @@ async function change_directory(new_directory) {
 function process_login_details(username, password, rememberme) {
     do_login(username, password, rememberme)
         .then(_ => {
-            load_roots();
+            show_main_screen();
+            load_roots().catch(err => {
+                if (err instanceof api_errors.AuthError) {
+                    show_login_screen();
+                }
+                else { throw err; }
+            });
         })
         .catch(err => {
             if (err instanceof api_errors.AuthError) {
@@ -532,19 +598,14 @@ function process_create_account_details(username, password, password_conf) {
 
 window.addEventListener("load", _ => {
     // register required click events
-    document.getElementById("load-shares-bnt").addEventListener("click", go_to_shares);
-    document.getElementById("upload-file-bnt").addEventListener("click", upload_file);
-    document.getElementById("create-dir-bnt").addEventListener("click", create_dir);
-    document.getElementById("logoutBnt").addEventListener("click", do_logout);
+    document.getElementById("login-bnt").addEventListener("click", show_login_screen);
 
-    // quick check for if a user has a token
-    // this prevents an unneeded request to API
-    if (get_stored_token() === null) { show_login_screen(); }
-    else {
+    if (get_stored_token() != null) {
         BasicCloudApi.auth_token = {
             token_type: "bearer",
             access_token: get_stored_token()
         };
+        show_main_screen();
         load_roots().catch(err => {
             if (err instanceof api_errors.AuthError) {
                 show_login_screen();

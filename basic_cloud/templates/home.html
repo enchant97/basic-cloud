@@ -1,12 +1,20 @@
 {% extends "/shared/base.html" %}
 {% block title %}The Cloud{% endblock %}
 {% block nav %}
-<button id="load-shares-bnt" disabled>Shares</button>
-<button id="upload-file-bnt" disabled>Upload File</button>
-<button id="create-dir-bnt" disabled>Create Directory</button>
-<button id="logoutBnt">Logout</button>
+<button id="login-bnt">Login</button>
 {% endblock %}
 {% block main %}
-<h3 id="curr-directory"></h3>
-<div id="files-and-dirs"></div>
+<p>
+    A 'cloud' storage API that is easy to use and modern.
+</p>
+<h3>Companion Apps</h3>
+<p>
+    You can also download companion apps, take a look
+    <a href="https://github.com/enchant97/basic-cloud#companion-apps">here</a> for supported ones.
+</p>
+<h3>Developer</h3>
+<p>
+    If you are a developer, you can write your own software to communicate with this,
+    have a look at the inbuilt documentation (built with Swagger UI & OpenAPI) <a href="/docs">here</a>.
+</p>
 {% endblock %}
