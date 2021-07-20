@@ -1,7 +1,7 @@
 import * as api_errors from "./modules/errors.js";
 import * as helpers from "./modules/helpers.js";
 import Popup, { POPUP_MESSAGE_TYPE_CLASS, ButtonChoice } from "./modules/popup.js";
-import BasicCloudApi from "./modules/api.js";
+import BasicCloudApi, { API_VERSION } from "./modules/api.js";
 
 const TOKEN_KEY = "token";
 const USERNAME_KEY = "username";
@@ -596,9 +596,31 @@ function process_create_account_details(username, password, password_conf) {
     }
 }
 
-window.addEventListener("load", _ => {
-    // register required click events
-    document.getElementById("login-bnt").addEventListener("click", show_login_screen);
+/**
+ * check whether the app is compatible with server API
+ * @returns whether the app is compatible
+ */
+async function is_app_compatible() {
+    const server_version = await BasicCloudApi.get_api_version();
+    if (API_VERSION >= server_version.oldest_compatible &&
+            API_VERSION <= server_version.version) {
+        return true;
+    }
+    return false;
+}
+
+/**
+ * initial app setup
+ */
+async function app_load() {
+    if (!(await is_app_compatible())){
+        Popup.append_message(
+            "Incompatible",
+            "App not compatible with server API version",
+            POPUP_MESSAGE_TYPE_CLASS.ERROR
+        )
+        return;
+    }
 
     if (get_stored_token() != null) {
         BasicCloudApi.auth_token = {
@@ -606,11 +628,17 @@ window.addEventListener("load", _ => {
             access_token: get_stored_token()
         };
         show_main_screen();
-        load_roots().catch(err => {
-            if (err instanceof api_errors.AuthError) {
-                show_login_screen();
-            }
-            else { throw err; }
-        });
+        await load_roots();
     }
+}
+
+window.addEventListener("load", _ => {
+    // register required click events
+    document.getElementById("login-bnt").addEventListener("click", show_login_screen);
+    app_load().catch(err => {
+        if (err instanceof api_errors.AuthError) {
+            show_login_screen();
+        }
+        else { throw err; }
+    });
 });
