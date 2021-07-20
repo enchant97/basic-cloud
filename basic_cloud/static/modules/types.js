@@ -1,0 +1,7 @@
+export const CONTENT_CHANGE_TYPES = {
+    OTHER_CHANGE: 0,
+    CREATION: 1,
+    DELETION: 2,
+    DOWNLOAD: 3,
+    SHARED: 4,
+}

@@ -88,7 +88,21 @@ function show_main_screen() {
     main.append(curr_dir_label);
     main.append(files_and_dirs_container);
 }
-
+/**
+ * show a files history of changes
+ * @param {string} file_path - the filepath
+ */
+async function handle_file_content_history(file_path) {
+    const loading_popup = Popup.append_loading("Loading", "getting file history");
+    try {
+        const history = await BasicCloudApi.get_file_history(file_path);
+        const history_table = helpers.create_history_container(history);
+        Popup.append_container("File History", "the complete file history", history_table);
+    }
+    finally {
+        loading_popup.remove();
+    }
+}
 /**
  * create file and directory row elements
  * and control their function
@@ -154,6 +168,7 @@ class FileDirRow {
             this.button_choices.push(new ButtonChoice("Delete", BasicCloudApi.delete_file, [this.path]));
         }
         this.download_bnt_elem.addEventListener("click", _ => { start_download_file(this.path) });
+        this.button_choices.push(new ButtonChoice("History", handle_file_content_history, [this.path]));
     }
     make_dir_row_rm() {
         this.button_choices.push(new ButtonChoice("Delete", BasicCloudApi.delete_directory, [this.path]));

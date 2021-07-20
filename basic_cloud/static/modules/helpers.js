@@ -1,3 +1,5 @@
+import { CONTENT_CHANGE_TYPES } from "./types.js";
+
 /**
  * gets the filename from a filepath
  * @param {String} file_path - the filepath to convert
@@ -66,4 +68,57 @@ export function add_spin_loader(target_element) {
 export function remove_spin_loader(target_element, loading_element) {
     target_element.style = null;
     loading_element.remove();
+}
+/**
+ * give a message for a designated content change type
+ * @param {CONTENT_CHANGE_TYPES} change_type - the change
+ * @returns the message
+ */
+export function content_change_type_to_message(change_type) {
+    switch (change_type) {
+        case CONTENT_CHANGE_TYPES.CREATION:
+            return "Created";
+        case CONTENT_CHANGE_TYPES.DELETION:
+            return "Deleted";
+        case CONTENT_CHANGE_TYPES.DOWNLOAD:
+            return "Downloaded";
+        case CONTENT_CHANGE_TYPES.SHARED:
+            return "Shared";
+        default:
+            return "Other";
+    }
+}
+/**
+ * process the content changes into a table
+ * @param {Array} content_changes - the changes from the API
+ * @returns the history table
+ */
+export function create_history_container(content_changes) {
+    const table = document.createElement("table");
+    const table_head = document.createElement("thead");
+    const table_body = document.createElement("tbody");
+
+    const header_row = document.createElement("tr");
+    const col_1 = document.createElement("th");
+    const col_2 = document.createElement("th");
+    col_1.innerText = "Created At";
+    col_2.innerText = "What Happened";
+    header_row.append(col_1);
+    header_row.append(col_2);
+    table_head.append(header_row);
+
+    content_changes.forEach(change => {
+        let row = document.createElement("tr");
+        let created_at = document.createElement("td");
+        let what_change = document.createElement("td");
+        created_at.innerText = new Date(change.created_at).toLocaleString();
+        what_change.innerText = content_change_type_to_message(change.type_enum);
+        row.append(created_at);
+        row.append(what_change);
+        table_body.append(row);
+    });
+
+    table.append(table_head);
+    table.append(table_body);
+    return table;
 }

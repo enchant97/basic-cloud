@@ -36,7 +36,8 @@ button,
 a,
 footer,
 strong,
-p {
+p,
+table {
     font-family: var(--font-family-main);
     color: var(--font-dark);
     font-size: 0.9em;
@@ -151,6 +152,46 @@ main div#files-and-dirs {
 
 main div#files-and-dirs button {
     text-align: left;
+}
+
+table {
+    width: 100%;
+    border-bottom: 4px solid var(--bg-body3);
+    border-spacing: 0;
+}
+
+table th,
+table td {
+    border-bottom: 1px solid var(--border-col);
+    border-right: 1px solid var(--border-col);
+    padding: 8px;
+}
+
+table thead {
+    color: var(--font-light);
+    background-color: var(--bg-body3);
+}
+
+table thead tr:first-child th:first-child {
+    border-top-left-radius: var(--border-radius);
+}
+
+table thead tr:first-child th:last-child {
+    border-top-right-radius: var(--border-radius);
+}
+
+table thead th {
+    padding-top: 10px;
+    padding-bottom: 10px;
+}
+
+table tr:last-child>td {
+    border-bottom: none;
+}
+
+table tr td:last-child,
+table tr th:last-child {
+    border-right: none;
 }
 
 #curr-directory {

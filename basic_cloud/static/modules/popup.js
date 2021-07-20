@@ -89,6 +89,37 @@ export default class Popup {
         return popup;
     }
     /**
+     * appends a container popup with a message
+     * @param {string} title - the pop-up title
+     * @param {string} description - the pop-up description
+     * @param {HTMLElement} container - a HTML element to add
+     * @param {Function} ok_callback - called when the user has pressed ok
+     */
+    static append_container(title, description, container, ok_callback = null) {
+        const content_element = document.createElement("div");
+        const title_element = document.createElement("h3");
+        const desc_element = document.createElement("p");
+        const ok_button = document.createElement("button");
+
+        content_element.classList.add("down");
+        title_element.innerText = title;
+        desc_element.innerText = description;
+        ok_button.innerText = "OK";
+
+        content_element.append(title_element);
+        content_element.append(desc_element);
+        content_element.append(container);
+        content_element.append(ok_button);
+
+        const popup = this.append_base(content_element);
+
+        ok_button.addEventListener("click", _ => {
+            popup.remove();
+            ok_callback?.();
+        });
+        return popup;
+    }
+    /**
      * appends a popup with a loading message
      * @param {string} title - the pop-up title
      * @param {string} description - the pop-up description

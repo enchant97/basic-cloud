@@ -1,6 +1,6 @@
 import * as api_errors from "./errors.js";
 
-export const API_VERSION = "0.1.0";
+export const API_VERSION = "0.3.0";
 
 export default class BasicCloudApi {
     static auth_token;
@@ -209,6 +209,20 @@ export default class BasicCloudApi {
             });
         if (!response.ok) { this.handle_known_http_errors(response); }
     }
+    /**
+     * get the files history
+     * @param {string} file_path - the file to get the history
+     * @returns the complete file history as a ContentChange
+     */
+    static async get_file_history(file_path) {
+        file_path = btoa(file_path);
+        const api_url = this.base_url + "/api/file/" + file_path + "/history";
+        const response = await fetch(api_url,
+            {
+                method: "GET",
+                headers: this.get_auth_headers(),
+            });
+        if (!response.ok) { this.handle_known_http_errors(response); }
+        return await response.json();
+    }
 }
-
-// TODO handle (AuthError, UnhandledError) on each API method use
