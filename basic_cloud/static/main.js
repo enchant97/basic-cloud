@@ -104,6 +104,21 @@ async function handle_file_content_history(file_path) {
     }
 }
 /**
+ * show a folder's history of changes
+ * @param {string} directory - the directory
+ */
+async function handle_directory_content_history(directory) {
+    const loading_popup = Popup.append_loading("Loading", "getting directory history");
+    try {
+        const history = await BasicCloudApi.get_directory_history(directory);
+        const history_table = helpers.create_history_container(history);
+        Popup.append_container("Directory History", "the complete directory history", history_table);
+    }
+    finally {
+        loading_popup.remove();
+    }
+}
+/**
  * create file and directory row elements
  * and control their function
  */
@@ -188,6 +203,7 @@ class FileDirRow {
         if (edit_allowed) {
             this.button_choices.push(new ButtonChoice("Delete", BasicCloudApi.delete_directory, [this.path]));
         }
+        this.button_choices.push(new ButtonChoice("History", handle_directory_content_history, [this.path]));
         this.add_dir_zip_download();
         this.add_dir_navigate();
     }

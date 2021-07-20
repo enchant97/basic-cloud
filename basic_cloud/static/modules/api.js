@@ -118,6 +118,22 @@ export default class BasicCloudApi {
         return await response.json();
     }
     /**
+     * get the folder's history
+     * @param {string} directory - the directory
+     * @returns the complete directory history as a ContentChange
+     */
+    static async get_directory_history(directory) {
+        directory = btoa(directory);
+        const api_url = this.base_url + "/api/directory/" + directory + "/history";
+        const response = await fetch(api_url,
+            {
+                method: "GET",
+                headers: this.get_auth_headers(),
+            });
+        if (!response.ok) { this.handle_known_http_errors(response); }
+        return await response.json();
+    }
+    /**
      * create a directory
      * @param {string} directory - the current directory
      * @param {string} name - the new directory name
