@@ -1,6 +1,7 @@
-import { InvalidLoginError } from "./modules/errors.js";
+import * as api_errors from "./modules/errors.js";
 import * as helpers from "./modules/helpers.js";
 import Popup, { POPUP_MESSAGE_TYPE_CLASS, ButtonChoice } from "./modules/popup.js";
+import BasicCloudApi from "./modules/api.js";
 
 const TOKEN_KEY = "token";
 const USERNAME_KEY = "username";
@@ -82,12 +83,12 @@ class FileDirRow {
     }
     make_file_row(edit_allowed = true) {
         if (edit_allowed) {
-            this.button_choices.push(new ButtonChoice("Delete", fetch_rmfile, [this.path]));
+            this.button_choices.push(new ButtonChoice("Delete", BasicCloudApi.delete_file, [this.path]));
         }
         this.download_bnt_elem.addEventListener("click", _ => { start_download_file(this.path) });
     }
     make_dir_row_rm() {
-        this.button_choices.push(new ButtonChoice("Delete", fetch_rmdir, [this.path]));
+        this.button_choices.push(new ButtonChoice("Delete", BasicCloudApi.delete_directory, [this.path]));
     }
     make_up_dir_row() {
         this.download_bnt_elem.setAttribute("disabled", true);
@@ -102,7 +103,7 @@ class FileDirRow {
     }
     make_dir_row(edit_allowed = true) {
         if (edit_allowed) {
-            this.button_choices.push(new ButtonChoice("Delete", fetch_rmdir, [this.path]));
+            this.button_choices.push(new ButtonChoice("Delete", BasicCloudApi.delete_directory, [this.path]));
         }
         this.add_dir_zip_download();
         this.add_dir_navigate();
@@ -234,20 +235,6 @@ function remove_token() {
 }
 
 /**
- * adds a auth header with the token
- * @param {string} content_type - the content type
- * @returns html header for use with fetch
- */
-function get_auth_headers(content_type = "application/json") {
-    const headers = {
-        "Authorization": `Bearer ${get_stored_token()}`,
-        "Content-Type": content_type,
-    };
-    if (content_type === null) { delete headers["Content-Type"]; }
-    return headers;
-}
-
-/**
  * updates the current directory element
  */
 function update_curr_dir_status(new_location) {
@@ -255,155 +242,11 @@ function update_curr_dir_status(new_location) {
 }
 
 /**
- * fetches a new token with given credentials
- * @param {string} username
- * @param {string} password
- * @returns the token
- */
-async function fetch_token(username, password) {
-    const resp = await fetch("/token",
-        {
-            method: "POST",
-            body: `grant_type=password&username=${username}&password=${password}`,
-            headers: { "Content-Type": "application/x-www-form-urlencoded" },
-        });
-    if (resp.status === 401) {
-        throw new InvalidLoginError("invalid login details");
-    }
-    const token = await resp.json();
-    return token.access_token;
-}
-
-async function fetch_create_account(username, password) {
-    const resp = await fetch("/api/users/",
-        {
-            method: "POST",
-            body: JSON.stringify({ username, password }),
-            headers: { "Content-Type": "application/json" },
-        });
-    if (!resp.ok) { throw new Error(resp.status) }
-    return await resp.json();
-}
-
-/**
- * get the files and directories
- * @param {string} directory - the directory to load
- * @returns the files and directories
- */
-async function fetch_dir_content(directory) {
-    const resp = await fetch("/api/directory/contents",
-        {
-            method: "POST",
-            body: JSON.stringify({ directory: directory }),
-            headers: get_auth_headers(),
-        }
-    );
-    if (resp.status === 401) { show_login_screen(); }
-    return await resp.json();
-}
-
-/**
- * get the root directories
- * @returns the root directories
- */
-async function fetch_root_dirs() {
-    const resp = await fetch("/api/directory/roots",
-        {
-            method: "GET",
-            headers: get_auth_headers(),
-        }
-    );
-    if (resp.status === 401) { show_login_screen(); }
-    return await resp.json();
-}
-/**
- * remove a file
- * @param {string} file_path - file path
- */
-async function fetch_rmfile(file_path) {
-    const resp = await fetch("/api/file/rm",
-        {
-            method: "DELETE",
-            body: JSON.stringify({ file_path }),
-            headers: get_auth_headers(),
-        });
-    if (resp.status === 401) { show_login_screen(); }
-    if (!resp.ok) { throw new Error(resp.status) }
-    return await resp.text();
-}
-/**
- * upload a file
- * @param {FormData} form_data - the file and directory to upload to
- * @returns
- */
-async function fetch_upload_file(form_data) {
-    const resp = await fetch("/api/file/upload/overwrite",
-        {
-            method: "POST",
-            body: form_data,
-            headers: get_auth_headers(null),
-        });
-    if (resp.status === 401) { show_login_screen(); }
-    if (!resp.ok) { throw new Error(resp.status) }
-    const json_data = await resp.json();
-    return json_data;
-}
-
-/**
- * create a new directory
- * @param {string} directory - directory path
- * @param {string} name - the name of the directory to create
- * @returns the directory path created
- */
-async function fetch_mkdir(directory, name) {
-    const resp = await fetch("/api/directory/mkdir",
-        {
-            method: "POST",
-            body: JSON.stringify({ directory, name }),
-            headers: get_auth_headers(),
-        });
-    if (resp.status === 401) { show_login_screen(); }
-    if (!resp.ok) { throw new Error(resp.status) }
-    return await resp.text();
-}
-/**
- * remove a directory
- * @param {string} directory - directory path
- */
-async function fetch_rmdir(directory) {
-    const resp = await fetch("/api/directory/rm",
-        {
-            method: "DELETE",
-            body: JSON.stringify({ directory }),
-            headers: get_auth_headers(),
-        });
-    if (resp.status === 401) { show_login_screen(); }
-    if (!resp.ok) { throw new Error(resp.status) }
-    return await resp.text();
-}
-/**
- * download a directory as a zip
- * @param {string} directory - the directory
- * @returns the downloaded blob
- */
-async function fetch_download_zip(directory) {
-    directory = btoa(directory);
-    var api_url = "/api/directory/download/" + directory;
-    const resp = await fetch(api_url,
-        {
-            method: "GET",
-            headers: get_auth_headers("text/plain"),
-        });
-    if (resp.status === 401) { show_login_screen(); }
-    if (!resp.ok) { throw new Error(resp.status) }
-    return await resp.blob();
-}
-/**
  * download a directory as a zip
  * @param {string} directory - the directory to download
  */
 function start_download_zip(directory) {
-    fetch_download_zip(directory)
+    BasicCloudApi.get_directory_as_zip(directory)
         .then(blob => {
             const url = URL.createObjectURL(blob);
             const filename = helpers.path_to_filename(directory)
@@ -412,56 +255,29 @@ function start_download_zip(directory) {
         });
 }
 /**
- * download a file
- * @param {String} file_path - the filepath
- * @returns the downloaded blob
- */
-async function fetch_download_file(file_path) {
-    file_path = btoa(file_path);
-    var api_url = "/api/file/download/" + file_path;
-    const resp = await fetch(api_url,
-        {
-            method: "GET",
-            headers: get_auth_headers("text/plain"),
-        });
-    if (resp.status === 401) { show_login_screen(); }
-    if (!resp.ok) { throw new Error(resp.status) }
-    return await resp.blob();
-}
-/**
  * start downloading a file
  * @param {string} file_path - path of file to download
  */
 function start_download_file(file_path) {
     const filename = helpers.path_to_filename(file_path);
-    fetch_download_file(file_path)
+    BasicCloudApi.get_file(file_path)
         .then(blob => {
             const url = URL.createObjectURL(blob);
             helpers.download(url, filename);
             URL.revokeObjectURL(url);
         });
 }
-/**
- * start uploading a file
- * @param {string} root_path - the path to use for upload destination
- * @param {string} file_elem - the file element to get file from
- */
-async function start_upload_file(root_path, file_elem) {
-    const form_data = new FormData();
-    form_data.append("file", file_elem.files[0]);
-    form_data.append("directory", root_path);
-    await fetch_upload_file(form_data);
-    file_elem.remove();
-}
 function handle_file_upload(file_elem) {
     const loading_popup = Popup.append_loading(
         "Uploading File",
         "uploading please wait"
     );
-    start_upload_file(curr_dir, file_elem)
+
+    BasicCloudApi.post_upload_file(file_elem.files[0], curr_dir)
         .then(_ => {
             loading_popup.remove();
-            Popup.append_message("Upload Success", "file has been uploaded")
+            Popup.append_message("Upload Success", "file has been uploaded");
+            file_elem.remove();
         })
         .catch(_err => {
             loading_popup.remove();
@@ -503,7 +319,7 @@ function create_dir() {
     if (curr_dir) {
         const name = prompt("directory name");
         if (name) {
-            fetch_mkdir(curr_dir, name)
+            BasicCloudApi.post_create_directory(curr_dir, name)
                 .then(directory => {
                     Popup.append_message(
                         "Directory Creation Success",
@@ -545,7 +361,7 @@ function create_dir() {
  */
 async function do_login(username, password, rememberme) {
     // get a token
-    const token = await fetch_token(username, password);
+    const token = (await BasicCloudApi.post_login_token(username, password)).access_token;
     // remove tokens from browser storage
     remove_token();
     remove_username();
@@ -575,7 +391,7 @@ function do_logout() {
 async function load_roots() {
     const files_and_dirs = document.getElementById("files-and-dirs");
     const loading_element = helpers.add_spin_loader(files_and_dirs);
-    const roots = await fetch_root_dirs();
+    const roots = await BasicCloudApi.get_directory_roots();
 
     helpers.delete_children(files_and_dirs);
     append_directory_root_row_element(files_and_dirs, roots.shared, roots.shared);
@@ -594,7 +410,7 @@ async function load_roots() {
 async function change_directory(new_directory) {
     const files_and_dirs = document.getElementById("files-and-dirs");
     const loading_element = helpers.add_spin_loader(files_and_dirs);
-    const dir_content = await fetch_dir_content(new_directory);
+    const dir_content = await BasicCloudApi.post_directory_content(new_directory);
 
     helpers.delete_children(files_and_dirs);
 
@@ -630,7 +446,7 @@ function process_login_details(username, password, rememberme) {
         .then(_ => {
             load_roots();
         }).catch(err => {
-            if (err instanceof InvalidLoginError) {
+            if (err instanceof api_errors.AuthError) {
                 alert(err.message);
             }
             else { throw err; }
@@ -646,7 +462,7 @@ function process_create_account_details(username, password, password_conf) {
         );
     }
     else {
-        fetch_create_account(username, password)
+        BasicCloudApi.post_create_account(username, password)
             .then(_ => { show_login_screen() })
             .catch(err => {
                 Popup.append_message(
@@ -668,5 +484,11 @@ window.addEventListener("load", _ => {
     // quick check for if a user has a token
     // this prevents an unneeded request to API
     if (get_stored_token() === null) { show_login_screen(); }
-    else { load_roots(); }
+    else {
+        BasicCloudApi.auth_token = {
+            token_type: "bearer",
+            access_token: get_stored_token()
+        };
+        load_roots();
+    }
 });
