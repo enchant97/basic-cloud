@@ -119,6 +119,21 @@ async function handle_directory_content_history(directory) {
     }
 }
 /**
+ * show a file shares view
+ * @param {string} file_path - the filepath
+ */
+async function handle_share_file_view(file_path) {
+    const loading_popup = Popup.append_loading("Loading", "getting share list");
+    try {
+        const shares = await BasicCloudApi.get_file_shares(file_path);
+        const shares_table = helpers.create_file_shares_container(shares, BasicCloudApi.base_url);
+        Popup.append_container("Shares", "file share management", shares_table);
+    }
+    finally {
+        loading_popup.remove();
+    }
+}
+/**
  * create file and directory row elements
  * and control their function
  */
@@ -184,6 +199,7 @@ class FileDirRow {
         }
         this.download_bnt_elem.addEventListener("click", _ => { start_download_file(this.path) });
         this.button_choices.push(new ButtonChoice("History", handle_file_content_history, [this.path]));
+        this.button_choices.push(new ButtonChoice("Share", handle_share_file_view, [this.path]));
     }
     make_dir_row_rm() {
         this.button_choices.push(new ButtonChoice("Delete", BasicCloudApi.delete_directory, [this.path]));

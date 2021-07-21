@@ -89,6 +89,15 @@ export function content_change_type_to_message(change_type) {
     }
 }
 /**
+ * create a url for downloading a file from a share
+ * @param {string} share_uuid - the share's uuid
+ * @param {string} api_base_url - the API base url
+ * @returns the download url
+ */
+export function make_share_link_url(share_uuid, api_base_url) {
+    return api_base_url + "/api/file/share/" + share_uuid + "/download";
+}
+/**
  * process the content changes into a table
  * @param {Array} content_changes - the changes from the API
  * @returns the history table
@@ -115,6 +124,51 @@ export function create_history_container(content_changes) {
         what_change.innerText = content_change_type_to_message(change.type_enum);
         row.append(created_at);
         row.append(what_change);
+        table_body.append(row);
+    });
+
+    table.append(table_head);
+    table.append(table_body);
+    return table;
+}
+/**
+ * process the shares into a table
+ * @param {*} file_shares - the shares from API
+ * @param {string} api_base_url - the API base url
+ * @returns the file shares table
+ */
+export function create_file_shares_container(file_shares, api_base_url) {
+    const table = document.createElement("table");
+    const table_head = document.createElement("thead");
+    const table_body = document.createElement("tbody");
+
+    const header_row = document.createElement("tr");
+    const uuid_col_label = document.createElement("th");
+    const expires_col_label = document.createElement("th");
+    const uses_col_label = document.createElement("th");
+    uuid_col_label.innerText = "Link";
+    expires_col_label.innerText = "Expires";
+    uses_col_label.innerText = "Uses Left";
+    header_row.append(uuid_col_label);
+    header_row.append(expires_col_label);
+    header_row.append(uses_col_label);
+    table_head.append(header_row);
+
+    file_shares.forEach(share => {
+        let row = document.createElement("tr");
+        let uuid_col = document.createElement("td");
+        let download_link = document.createElement("input");
+        let expires_col = document.createElement("td");
+        let uses_col = document.createElement("td");
+        download_link.type = "text";
+        download_link.value = make_share_link_url(share.uuid, api_base_url);
+        download_link.setAttribute("readonly", true);
+        expires_col.innerText = share.expires != null ? new Date(share.expires).toLocaleString() : "";
+        uses_col.innerText = share.uses_left;
+        uuid_col.append(download_link);
+        row.append(uuid_col);
+        row.append(expires_col);
+        row.append(uses_col);
         table_body.append(row);
     });
 
