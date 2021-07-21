@@ -241,4 +241,80 @@ export default class BasicCloudApi {
         if (!response.ok) { this.handle_known_http_errors(response); }
         return await response.json();
     }
+    /**
+     * get a files shares
+     * @param {string} file_path - the file path
+     * @returns any created shares
+     */
+    static async get_file_shares(file_path) {
+        file_path = btoa(file_path);
+        const api_url = this.base_url + "/api/file/" + file_path + "/shares";
+        const response = await fetch(api_url,
+            {
+                method: "GET",
+                headers: this.get_auth_headers(),
+            });
+        if (!response.ok) { this.handle_known_http_errors(response); }
+        return await response.json();
+    }
+    /**
+     * create a new file share
+     * @param {string} path - the filepath
+     * @param {string} expires - add a expiry date
+     * @param {number} uses_left - add a usage limit
+     * @returns the created file share
+     */
+    static async post_file_share(path, expires = null, uses_left = null) {
+        const response = await fetch(this.base_url + "/api/file/share",
+            {
+                method: "POST",
+                body: JSON.stringify({ path, expires, uses_left }),
+                headers: this.get_auth_headers(),
+            }
+        );
+        if (!response.ok) { this.handle_known_http_errors(response); }
+        return await response.json();
+    }
+    /**
+     * get share meta
+     * @param {string} share_uuid - the share's uuid
+     * @returns the shares meta
+     */
+    static async get_file_share_meta(share_uuid) {
+        const api_url = this.base_url + "/api/file/share/" + share_uuid;
+        const response = await fetch(api_url,
+            {
+                method: "GET",
+                headers: this.get_auth_headers(),
+            });
+        if (!response.ok) { this.handle_known_http_errors(response); }
+        return await response.json();
+    }
+    /**
+     * delete a file share
+     * @param {string} share_uuid - the share's uuid
+     */
+    static async delete_file_share(share_uuid) {
+        const response = await fetch(this.base_url + "/api/file/share/" + share_uuid,
+            {
+                method: "DELETE",
+                headers: this.get_auth_headers(),
+            });
+        if (!response.ok) { this.handle_known_http_errors(response); }
+    }
+    /**
+     * download the file from the share
+     * @param {string} share_uuid the share's uuid
+     * @returns the file as a blob
+     */
+    static async get_file_share_file(share_uuid) {
+        var api_url = this.base_url + "/api/file/share/" + share_uuid + "/download";
+        const response = await fetch(api_url,
+            {
+                method: "GET",
+                headers: this.get_auth_headers("text/plain"),
+            });
+        if (!response.ok) { this.handle_known_http_errors(response); }
+        return await response.blob();
+    }
 }
