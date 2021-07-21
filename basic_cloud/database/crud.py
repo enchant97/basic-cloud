@@ -77,7 +77,12 @@ async def get_content_changes_by_path(path: Path) -> List[ContentChange]:
 
 
 async def create_file_share(filepath: Path, expires: datetime, uses_left: int) -> FileShare:
-    file_share = FileShare(path=filepath, expires=expires, uses_left=uses_left)
+    file_share = FileShare(
+        path_hash=filepath,
+        path=filepath,
+        expires=expires,
+        uses_left=uses_left
+    )
     await file_share.save()
     return file_share
 
@@ -87,7 +92,7 @@ async def get_file_share_by_uuid(share_uuid: UUID) -> FileShare:
 
 
 async def get_shares_by_filepath(filepath: Path) -> List[FileShare]:
-    return await FileShare.filter(path=filepath).all()
+    return await FileShare.filter(path_hash=str(filepath)).all()
 
 
 async def delete_file_share(share_uuid: UUID):
