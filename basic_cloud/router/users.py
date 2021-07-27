@@ -10,7 +10,7 @@ from ..helpers.paths import create_user_home_dir
 router = APIRouter()
 
 
-@router.post("/", response_model=schema.User)
+@router.post("", response_model=schema.User)
 async def create_account(
         new_user: schema.UserCreate):
     try:
