@@ -4,7 +4,7 @@ from tortoise.contrib.fastapi import register_tortoise
 from .config import get_settings
 from .database import models
 from .helpers.constants import CURRENT_VERSION, STATIC
-from .router import admin, auth, file, folder, html, other, users
+from .router import admin, auth, file, folder, html, other, users, websocket
 
 tags_metadata = (
     {
@@ -48,6 +48,7 @@ app.mount("/static", STATIC, name="static")
 app.include_router(html.router, tags=["html"])
 app.include_router(auth.router, tags=["token"])
 app.include_router(other.router, prefix="/api", tags=["other"])
+app.include_router(websocket.router, prefix="/api", tags=["websocket"])
 app.include_router(users.router, prefix="/api/users", tags=["users"])
 app.include_router(folder.router, prefix="/api/directory", tags=["directories"])
 app.include_router(file.router, prefix="/api/file", tags=["files"])

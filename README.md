@@ -29,6 +29,9 @@ These are apps that are written separately from this project but will communicat
 |:---------|:----------|:---------|:-----|
 | Desktop  | GUI/CLI   | C# .Net  | [here](https://github.com/enchant97/basic-cloud-companion) |
 
+## More Docs
+[here](docs/index.md)
+
 ## License
 Copyright (C) 2021 Leo Spratt
 

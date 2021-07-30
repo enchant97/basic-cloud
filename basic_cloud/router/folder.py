@@ -4,19 +4,17 @@ import shutil
 from pathlib import Path
 from typing import List
 
-from fastapi import (APIRouter, Body, Depends, HTTPException, WebSocket,
-                     WebSocketDisconnect, status)
+from fastapi import APIRouter, Body, Depends, HTTPException, status
 from fastapi.responses import PlainTextResponse, StreamingResponse
 
 from ..config import get_settings
 from ..database import crud, models, schema
-from ..helpers.auth import get_current_active_user, get_current_user
+from ..helpers.auth import get_current_active_user
 from ..helpers.constants import ContentChangeTypes
 from ..helpers.exceptions import PathNotExists
 from ..helpers.paths import (create_root_path, create_zip, is_root_path,
                              relative_dir_contents)
 from ..helpers.schema import PathContent, Roots
-from ..shared import watchdog_ws_handler
 
 router = APIRouter()
 
@@ -238,46 +236,3 @@ async def download_zip(
             curr_user,
         )
     return StreamingResponse(zip_obj, media_type="application/zip")
-
-
-@router.websocket("/watchdog-ws/{directory}/{bearer_token}")
-async def watchdog_ws(
-        websocket: WebSocket,
-        directory: str,
-        bearer_token: str):
-
-    try:
-        curr_user = await get_current_active_user(await get_current_user(bearer_token))
-        directory = base64.b64decode(directory).decode()
-        directory = Path(directory)
-        try:
-            real_path = create_root_path(
-                directory,
-                get_settings().HOMES_PATH,
-                get_settings().SHARED_PATH,
-                curr_user.username,
-            )
-        except PathNotExists:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="unknown root directory",
-            )
-
-        if not real_path.exists():
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="directory must exist",
-            )
-        if not real_path.is_dir():
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="path must be a directory",
-            )
-        await watchdog_ws_handler.connect(websocket, directory)
-
-    except HTTPException:
-        # TODO remove this, and use WebSocketException when PR #527 on starlette is implemented
-        await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
-
-    except WebSocketDisconnect:
-        watchdog_ws_handler.disconnect(websocket)

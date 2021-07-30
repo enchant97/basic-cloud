@@ -33,3 +33,27 @@ class ContentChangeTypes(IntEnum):
     DELETION = 2
     DOWNLOAD = 3
     SHARED = 4
+
+
+@unique
+class WebsocketMessageTypeSend(IntEnum):
+    """
+    enums responsible for marking
+    what payload has been sent
+    in a message from the server
+
+        WATCHDOG_UPDATE: change from the file/directory watchdog
+    """
+    WATCHDOG_UPDATE = 1
+
+
+@unique
+class WebsocketMessageTypeReceive(IntEnum):
+    """
+    enums responsible for marking
+    what payload has been sent
+    in a message from the client
+
+        DIRECTORY_CHANGE: client has changed directory
+    """
+    DIRECTORY_CHANGE = 1
