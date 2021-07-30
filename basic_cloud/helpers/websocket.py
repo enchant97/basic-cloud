@@ -1,9 +1,14 @@
 from collections import defaultdict
+from dataclasses import dataclass
+from datetime import datetime
 from pathlib import Path
-from typing import Dict, Set
+from typing import Dict, Set, Union
 from uuid import UUID, uuid4
 
 from fastapi import WebSocket
+
+from .constants import (ContentChangeTypes, WebsocketMessageTypeReceive,
+                        WebsocketMessageTypeSend)
 
 
 class WebsocketHandler:
@@ -66,4 +71,42 @@ class WebsocketHandler:
         return len(WebsocketHandler._ws_by_uuid)
 
 
-# TODO add message creation helpers
+@dataclass
+class PayloadClientDirectoryChange:
+    directory: Path
+
+
+@dataclass
+class PayloadServerDirectoryUpdate:
+    path: Path
+    change_type: ContentChangeTypes
+
+
+@dataclass
+class WebsocketMessage:
+    message_type: Union[
+        WebsocketMessageTypeSend,
+        WebsocketMessageTypeReceive
+    ]
+    when: datetime
+    payload: Union[
+        PayloadClientDirectoryChange,
+        PayloadServerDirectoryUpdate
+    ]
+
+    @classmethod
+    def from_dict(cls, message: dict):
+        msg_type = message["message_type"]
+        when = message.get("when")
+        if when:
+            # XXX this will not work with js iso e.g 2021-07-30T15:29:50.175Z
+            when = datetime.fromisoformat(message["when"])
+        else:
+            # has not provided a date
+            when = datetime.utcnow()
+        payload = message["payload"]
+        if msg_type == WebsocketMessageTypeReceive.DIRECTORY_CHANGE:
+            payload = PayloadClientDirectoryChange(**payload)
+        elif msg_type == WebsocketMessageTypeSend.WATCHDOG_UPDATE:
+            payload = PayloadServerDirectoryUpdate(**payload)
+        return cls(msg_type, when, payload)
