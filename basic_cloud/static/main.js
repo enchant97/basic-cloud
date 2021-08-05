@@ -14,6 +14,16 @@ function new_ws_connection() {
     BasicCloudWsApi.bearer_token = BasicCloudApi.auth_token.access_token;
     BasicCloudWsApi.ws_connect();
 }
+
+function show_ws_error() {
+    Popup.append_message(
+        "Websocket Error",
+        "An error has occurred with the websocket, you \
+        will need to reload the page to receive live updates",
+        POPUP_MESSAGE_TYPE_CLASS.ERROR
+    );
+}
+
 /**
  * show login screen
  */
@@ -354,6 +364,8 @@ function get_stored_token() {
 function remove_token() {
     localStorage.removeItem(TOKEN_KEY);
     sessionStorage.removeItem(TOKEN_KEY);
+    BasicCloudWsApi.bearer_token = null;
+    BasicCloudApi.auth_token = null;
 }
 
 /**
@@ -496,16 +508,16 @@ function create_dir() {
  * requesting and storing the token
  * @param {string} username - the user username
  * @param {string} password - the user password
- * @param {boolean} rememberme - whether to store the token
+ * @param {boolean} remember_me - whether to store the token
  */
-async function do_login(username, password, rememberme) {
-    // get a token
-    const token = (await BasicCloudApi.post_login_token(username, password)).access_token;
+async function do_login(username, password, remember_me) {
     // remove tokens from browser storage
     remove_token();
     remove_username();
+    // get a token
+    const token = (await BasicCloudApi.post_login_token(username, password)).access_token;
     // store the tokens
-    if (rememberme) {
+    if (remember_me) {
         localStorage.setItem(USERNAME_KEY, username);
         localStorage.setItem(TOKEN_KEY, token);
     }
@@ -655,7 +667,7 @@ function process_create_account_details(username, password, password_conf) {
 
 function handle_watchdog_update(content_change) {
     if (content_change.change_type != CONTENT_CHANGE_TYPES.SHARED ||
-            content_change.change_type != CONTENT_CHANGE_TYPES.DOWNLOAD) {
+        content_change.change_type != CONTENT_CHANGE_TYPES.DOWNLOAD) {
         // TODO make a refresh directory method
         change_directory(curr_dir).catch(err => {
             if (err instanceof api_errors.AuthError) { show_login_screen(); }
@@ -691,6 +703,7 @@ async function app_load() {
     }
 
     BasicCloudWsApi.watchdog_update_callback = handle_watchdog_update;
+    BasicCloudWsApi.error_callback = show_ws_error;
 
     if (get_stored_token() != null) {
         BasicCloudApi.auth_token = {

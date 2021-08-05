@@ -6,6 +6,7 @@ export default class BasicCloudWsApi {
     static websocket;
     static last_ws_message_received;
     static watchdog_update_callback;
+    static error_callback;
     /**
      * create a new websocket connection to api server
      * @returns the websocket object
@@ -15,6 +16,7 @@ export default class BasicCloudWsApi {
         BasicCloudWsApi.websocket = new WebSocket(
             BasicCloudWsApi.base_url + "/api/ws?bearer_token=" + BasicCloudWsApi.bearer_token);
         BasicCloudWsApi.websocket.addEventListener("message", BasicCloudWsApi.process_ws_message);
+        BasicCloudWsApi.websocket.addEventListener("error", _ => { BasicCloudWsApi.error_callback(); });
         return BasicCloudWsApi.websocket;
     }
     /**
