@@ -3,6 +3,7 @@ import * as helpers from "./modules/helpers.js";
 import Popup, { POPUP_MESSAGE_TYPE_CLASS, ButtonChoice } from "./modules/popup.js";
 import BasicCloudApi, { API_VERSION } from "./modules/api.js";
 import BasicCloudWsApi from "./modules/ws_api.js";
+import { CONTENT_CHANGE_TYPES } from "./modules/types.js";
 
 const TOKEN_KEY = "token";
 const USERNAME_KEY = "username";
@@ -652,6 +653,17 @@ function process_create_account_details(username, password, password_conf) {
     }
 }
 
+function handle_watchdog_update(content_change) {
+    if (content_change.change_type != CONTENT_CHANGE_TYPES.SHARED ||
+            content_change.change_type != CONTENT_CHANGE_TYPES.DOWNLOAD) {
+        // TODO make a refresh directory method
+        change_directory(curr_dir).catch(err => {
+            if (err instanceof api_errors.AuthError) { show_login_screen(); }
+            else { throw err; }
+        });
+    }
+}
+
 /**
  * check whether the app is compatible with server API
  * @returns whether the app is compatible
@@ -677,6 +689,8 @@ async function app_load() {
         )
         return;
     }
+
+    BasicCloudWsApi.watchdog_update_callback = handle_watchdog_update;
 
     if (get_stored_token() != null) {
         BasicCloudApi.auth_token = {

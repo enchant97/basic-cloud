@@ -4,13 +4,17 @@ export default class BasicCloudWsApi {
     static bearer_token;
     static base_url = window.location.origin.replace("http", "ws");
     static websocket;
+    static last_ws_message_received;
+    static watchdog_update_callback;
     /**
      * create a new websocket connection to api server
      * @returns the websocket object
      */
     static ws_connect() {
+
         BasicCloudWsApi.websocket = new WebSocket(
             BasicCloudWsApi.base_url + "/api/ws?bearer_token=" + BasicCloudWsApi.bearer_token);
+        BasicCloudWsApi.websocket.addEventListener("message", BasicCloudWsApi.process_ws_message);
         return BasicCloudWsApi.websocket;
     }
     /**
@@ -49,5 +53,21 @@ export default class BasicCloudWsApi {
             api_types.WS_MESSAGE_RECEIVE_TYPES.DIRECTORY_CHANGE,
             payload
         );
+    }
+    /**
+     * process a websocket message event
+     * @param {MessageEvent} evt - the websocket message event
+     */
+    static process_ws_message(evt) {
+        let message = JSON.parse(evt.data);
+        BasicCloudWsApi.last_ws_message_received = new Date(message.when);
+        switch (message.message_type) {
+            case api_types.WS_MESSAGE_SEND_TYPES.WATCHDOG_UPDATE:
+                BasicCloudWsApi.watchdog_update_callback?.(message.payload);
+                break;
+            default:
+                console.log("unhandled websocket message type: " + message.message_type);
+                break;
+        }
     }
 }
