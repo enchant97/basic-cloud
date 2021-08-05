@@ -15,6 +15,7 @@ from ..helpers.exceptions import PathNotExists
 from ..helpers.paths import (create_root_path, create_zip, is_root_path,
                              relative_dir_contents)
 from ..helpers.schema import PathContent, Roots
+from ..shared import content_changed
 
 router = APIRouter()
 
@@ -133,13 +134,13 @@ async def create_directory(
         )
 
     full_path.mkdir(parents=True, exist_ok=True)
-    if get_settings().HISTORY_LOG:
-        await crud.create_content_change(
-            directory,
-            ContentChangeTypes.CREATION,
-            True,
-            curr_user,
-        )
+
+    await content_changed(
+        directory,
+        ContentChangeTypes.CREATION,
+        True,
+        curr_user
+    )
     return directory
 
 
@@ -178,13 +179,13 @@ async def delete_directory(
             )
 
         shutil.rmtree(full_path)
-        if get_settings().HISTORY_LOG:
-            await crud.create_content_change(
-                directory,
-                ContentChangeTypes.DELETION,
-                True,
-                curr_user,
-            )
+
+        await content_changed(
+            directory,
+            ContentChangeTypes.DELETION,
+            True,
+            curr_user
+        )
 
     except PathNotExists:
         raise HTTPException(
@@ -228,11 +229,11 @@ async def download_zip(
         )
 
     zip_obj = create_zip(full_path)
-    if get_settings().HISTORY_LOG:
-        await crud.create_content_change(
-            directory,
-            ContentChangeTypes.DOWNLOAD,
-            True,
-            curr_user,
-        )
+
+    await content_changed(
+        directory,
+        ContentChangeTypes.DOWNLOAD,
+        True,
+        curr_user
+    )
     return StreamingResponse(zip_obj, media_type="application/zip")

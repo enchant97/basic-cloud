@@ -1,5 +1,6 @@
+import json
 from collections import defaultdict
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass
 from datetime import datetime
 from pathlib import Path
 from typing import Dict, Set, Union
@@ -35,8 +36,9 @@ class WebsocketHandler:
     def move(client_uuid: UUID, new_dir: Path):
         new_dir = str(new_dir)
         # remove client from current directory
-        curr_dir = WebsocketHandler._clients_by_ws[client_uuid]
-        WebsocketHandler._clients_by_dir[curr_dir].discard(client_uuid)
+        curr_dir = WebsocketHandler._clients_by_ws.get(client_uuid)
+        if curr_dir:
+            WebsocketHandler._clients_by_dir[curr_dir].discard(client_uuid)
         # add to new directory
         WebsocketHandler._clients_by_dir[new_dir].add(client_uuid)
 
@@ -106,7 +108,27 @@ class WebsocketMessage:
             when = datetime.utcnow()
         payload = message["payload"]
         if msg_type == WebsocketMessageTypeReceive.DIRECTORY_CHANGE:
-            payload = PayloadClientDirectoryChange(**payload)
+            payload = PayloadClientDirectoryChange(Path(payload["directory"]))
         elif msg_type == WebsocketMessageTypeSend.WATCHDOG_UPDATE:
             payload = PayloadServerDirectoryUpdate(**payload)
         return cls(msg_type, when, payload)
+
+
+async def dispatch_content_change(
+        path: Path,
+        change_type: ContentChangeTypes):
+    message = WebsocketMessage(
+        message_type=WebsocketMessageTypeSend.WATCHDOG_UPDATE,
+        when=datetime.utcnow(),
+        payload=PayloadServerDirectoryUpdate(
+            path,
+            change_type,
+        ),
+    )
+    # TODO use custom json dump method
+    message_str = json.dumps(asdict(message), default=str)
+
+    # notify every path 'section'
+    while path != Path():
+        await WebsocketHandler.broadcast(message_str, path)
+        path = path.parent

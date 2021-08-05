@@ -18,6 +18,7 @@ from ..helpers.auth import get_current_active_user
 from ..helpers.constants import ContentChangeTypes
 from ..helpers.exceptions import PathNotExists, SharePathInvalid
 from ..helpers.paths import create_root_path
+from ..shared import content_changed
 
 router = APIRouter()
 
@@ -49,13 +50,12 @@ async def delete_file(
 
         full_path.unlink(missing_ok=True)
 
-        if get_settings().HISTORY_LOG:
-            await crud.create_content_change(
-                file_path,
-                ContentChangeTypes.DELETION,
-                False,
-                curr_user,
-            )
+        await content_changed(
+            file_path,
+            ContentChangeTypes.DELETION,
+            False,
+            curr_user
+        )
 
     except PathNotExists:
         raise HTTPException(
@@ -99,13 +99,12 @@ async def download_file(
             detail="cannot be a directory",
         )
 
-    if get_settings().HISTORY_LOG:
-        await crud.create_content_change(
-            file_path,
-            ContentChangeTypes.DOWNLOAD,
-            False,
-            curr_user,
-        )
+    await content_changed(
+        file_path,
+        ContentChangeTypes.DOWNLOAD,
+        False,
+        curr_user
+    )
 
     return FileResponse(full_path, filename=file_path.name)
 
@@ -148,13 +147,12 @@ async def upload_file_overwrite(
         await fo.write(await file.read())
         await file.close()
 
-    if get_settings().HISTORY_LOG:
-        await crud.create_content_change(
-            directory.joinpath(file.filename),
-            ContentChangeTypes.CREATION,
-            False,
-            curr_user,
-        )
+    await content_changed(
+        directory.joinpath(file.filename),
+        ContentChangeTypes.CREATION,
+        False,
+        curr_user
+    )
 
     return {"path": directory.joinpath(file.filename)}
 
@@ -282,13 +280,13 @@ async def create_file_share(
         file_share.expires,
         file_share.uses_left
     )
-    if get_settings().HISTORY_LOG:
-        await crud.create_content_change(
-            file_share.path,
-            ContentChangeTypes.SHARED,
-            False,
-            curr_user
-        )
+
+    await content_changed(
+        file_share.path,
+        ContentChangeTypes.SHARED,
+        False,
+        curr_user
+    )
     return created_row
 
 
