@@ -33,7 +33,7 @@ export default class BasicCloudApi {
      */
     static get_auth_headers(content_type = "application/json") {
         const headers = {
-            "Authorization": `Bearer ${this.auth_token.access_token}`,
+            "Authorization": `Bearer ${BasicCloudApi.auth_token.access_token}`,
             "Content-Type": content_type,
         };
         if (content_type === null) { delete headers["Content-Type"]; }
@@ -44,12 +44,12 @@ export default class BasicCloudApi {
      * @returns the api version
      */
     static async get_api_version() {
-        const response = await fetch(this.base_url + "/api/version",
+        const response = await fetch(BasicCloudApi.base_url + "/api/version",
             {
                 method: "GET",
                 headers: { "Content-Type": "application/json" },
             });
-        if (!response.ok) { this.handle_known_http_errors(response); }
+        if (!response.ok) { BasicCloudApi.handle_known_http_errors(response); }
         return await response.json();
     }
     /**
@@ -59,13 +59,13 @@ export default class BasicCloudApi {
      * @returns the created user
      */
     static async post_create_account(username, password) {
-        const response = await fetch(this.base_url + "/api/users/",
+        const response = await fetch(BasicCloudApi.base_url + "/api/users/",
             {
                 method: "POST",
                 body: JSON.stringify({ username, password }),
                 headers: { "Content-Type": "application/json" },
             });
-        if (!response.ok) { this.handle_known_http_errors(response); }
+        if (!response.ok) { BasicCloudApi.handle_known_http_errors(response); }
         return await response.json();
     }
     /**
@@ -76,15 +76,15 @@ export default class BasicCloudApi {
      * @returns the access token
      */
     static async post_login_token(username, password, save_token = true) {
-        const response = await fetch(this.base_url + "/token",
+        const response = await fetch(BasicCloudApi.base_url + "/token",
             {
                 method: "POST",
                 body: `grant_type=password&username=${username}&password=${password}`,
                 headers: { "Content-Type": "application/x-www-form-urlencoded" },
             });
-        if (!response.ok) { this.handle_known_http_errors(response); }
+        if (!response.ok) { BasicCloudApi.handle_known_http_errors(response); }
         const token = await response.json();
-        if (save_token) { this.auth_token = token; }
+        if (save_token) { BasicCloudApi.auth_token = token; }
         return token;
     }
     /**
@@ -92,13 +92,13 @@ export default class BasicCloudApi {
      * @returns the "roots"
      */
     static async get_directory_roots() {
-        const response = await fetch(this.base_url + "/api/directory/roots",
+        const response = await fetch(BasicCloudApi.base_url + "/api/directory/roots",
             {
                 method: "GET",
-                headers: this.get_auth_headers(),
+                headers: BasicCloudApi.get_auth_headers(),
             }
         );
-        if (!response.ok) { this.handle_known_http_errors(response); }
+        if (!response.ok) { BasicCloudApi.handle_known_http_errors(response); }
         return await response.json();
     }
     /**
@@ -107,14 +107,14 @@ export default class BasicCloudApi {
      * @returns the directory content
      */
     static async post_directory_content(directory) {
-        const response = await fetch(this.base_url + "/api/directory/contents",
+        const response = await fetch(BasicCloudApi.base_url + "/api/directory/contents",
             {
                 method: "POST",
                 body: JSON.stringify({ directory: directory }),
-                headers: this.get_auth_headers(),
+                headers: BasicCloudApi.get_auth_headers(),
             }
         );
-        if (!response.ok) { this.handle_known_http_errors(response); }
+        if (!response.ok) { BasicCloudApi.handle_known_http_errors(response); }
         return await response.json();
     }
     /**
@@ -124,13 +124,13 @@ export default class BasicCloudApi {
      */
     static async get_directory_history(directory) {
         directory = btoa(directory);
-        const api_url = this.base_url + "/api/directory/" + directory + "/history";
+        const api_url = BasicCloudApi.base_url + "/api/directory/" + directory + "/history";
         const response = await fetch(api_url,
             {
                 method: "GET",
-                headers: this.get_auth_headers(),
+                headers: BasicCloudApi.get_auth_headers(),
             });
-        if (!response.ok) { this.handle_known_http_errors(response); }
+        if (!response.ok) { BasicCloudApi.handle_known_http_errors(response); }
         return await response.json();
     }
     /**
@@ -140,13 +140,13 @@ export default class BasicCloudApi {
      * @returns the created directory path
      */
     static async post_create_directory(directory, name) {
-        const response = await fetch(this.base_url + "/api/directory/mkdir",
+        const response = await fetch(BasicCloudApi.base_url + "/api/directory/mkdir",
             {
                 method: "POST",
                 body: JSON.stringify({ directory, name }),
-                headers: this.get_auth_headers(),
+                headers: BasicCloudApi.get_auth_headers(),
             });
-        if (!response.ok) { this.handle_known_http_errors(response); }
+        if (!response.ok) { BasicCloudApi.handle_known_http_errors(response); }
         return await response.text();
     }
     /**
@@ -154,13 +154,13 @@ export default class BasicCloudApi {
      * @param {string} directory - the directory to delete
      */
     static async delete_directory(directory) {
-        const response = await fetch(this.base_url + "/api/directory/rm",
+        const response = await fetch(BasicCloudApi.base_url + "/api/directory/rm",
             {
                 method: "DELETE",
                 body: JSON.stringify({ directory }),
-                headers: this.get_auth_headers(),
+                headers: BasicCloudApi.get_auth_headers(),
             });
-        if (!response.ok) { this.handle_known_http_errors(response); }
+        if (!response.ok) { BasicCloudApi.handle_known_http_errors(response); }
     }
     /**
      * download a directory as a zip file
@@ -169,13 +169,13 @@ export default class BasicCloudApi {
      */
     static async get_directory_as_zip(directory) {
         directory = btoa(directory);
-        var api_url = this.base_url + "/api/directory/download/" + directory;
+        var api_url = BasicCloudApi.base_url + "/api/directory/download/" + directory;
         const response = await fetch(api_url,
             {
                 method: "GET",
-                headers: this.get_auth_headers("text/plain"),
+                headers: BasicCloudApi.get_auth_headers("text/plain"),
             });
-        if (!response.ok) { this.handle_known_http_errors(response); }
+        if (!response.ok) { BasicCloudApi.handle_known_http_errors(response); }
         return await response.blob();
     }
     /**
@@ -183,13 +183,13 @@ export default class BasicCloudApi {
      * @param {string} file_path - the file path to delete
      */
     static async delete_file(file_path) {
-        const response = await fetch(this.base_url + "/api/file/rm",
+        const response = await fetch(BasicCloudApi.base_url + "/api/file/rm",
             {
                 method: "DELETE",
                 body: JSON.stringify({ file_path }),
-                headers: this.get_auth_headers(),
+                headers: BasicCloudApi.get_auth_headers(),
             });
-        if (!response.ok) { this.handle_known_http_errors(response); }
+        if (!response.ok) { BasicCloudApi.handle_known_http_errors(response); }
     }
     /**
      * download the file content
@@ -198,13 +198,13 @@ export default class BasicCloudApi {
      */
     static async get_file(file_path) {
         file_path = btoa(file_path);
-        var api_url = this.base_url + "/api/file/download/" + file_path;
+        var api_url = BasicCloudApi.base_url + "/api/file/download/" + file_path;
         const response = await fetch(api_url,
             {
                 method: "GET",
-                headers: this.get_auth_headers("text/plain"),
+                headers: BasicCloudApi.get_auth_headers("text/plain"),
             });
-        if (!response.ok) { this.handle_known_http_errors(response); }
+        if (!response.ok) { BasicCloudApi.handle_known_http_errors(response); }
         return await response.blob();
     }
     /**
@@ -217,13 +217,13 @@ export default class BasicCloudApi {
         form_data.append("file", file);
         form_data.append("directory", directory);
 
-        const response = await fetch(this.base_url + "/api/file/upload/overwrite",
+        const response = await fetch(BasicCloudApi.base_url + "/api/file/upload/overwrite",
             {
                 method: "POST",
                 body: form_data,
-                headers: this.get_auth_headers(null),
+                headers: BasicCloudApi.get_auth_headers(null),
             });
-        if (!response.ok) { this.handle_known_http_errors(response); }
+        if (!response.ok) { BasicCloudApi.handle_known_http_errors(response); }
     }
     /**
      * get the files history
@@ -232,13 +232,13 @@ export default class BasicCloudApi {
      */
     static async get_file_history(file_path) {
         file_path = btoa(file_path);
-        const api_url = this.base_url + "/api/file/" + file_path + "/history";
+        const api_url = BasicCloudApi.base_url + "/api/file/" + file_path + "/history";
         const response = await fetch(api_url,
             {
                 method: "GET",
-                headers: this.get_auth_headers(),
+                headers: BasicCloudApi.get_auth_headers(),
             });
-        if (!response.ok) { this.handle_known_http_errors(response); }
+        if (!response.ok) { BasicCloudApi.handle_known_http_errors(response); }
         return await response.json();
     }
     /**
@@ -248,13 +248,13 @@ export default class BasicCloudApi {
      */
     static async get_file_shares(file_path) {
         file_path = btoa(file_path);
-        const api_url = this.base_url + "/api/file/" + file_path + "/shares";
+        const api_url = BasicCloudApi.base_url + "/api/file/" + file_path + "/shares";
         const response = await fetch(api_url,
             {
                 method: "GET",
-                headers: this.get_auth_headers(),
+                headers: BasicCloudApi.get_auth_headers(),
             });
-        if (!response.ok) { this.handle_known_http_errors(response); }
+        if (!response.ok) { BasicCloudApi.handle_known_http_errors(response); }
         return await response.json();
     }
     /**
@@ -265,14 +265,14 @@ export default class BasicCloudApi {
      * @returns the created file share
      */
     static async post_file_share(path, expires = null, uses_left = null) {
-        const response = await fetch(this.base_url + "/api/file/share",
+        const response = await fetch(BasicCloudApi.base_url + "/api/file/share",
             {
                 method: "POST",
                 body: JSON.stringify({ path, expires, uses_left }),
-                headers: this.get_auth_headers(),
+                headers: BasicCloudApi.get_auth_headers(),
             }
         );
-        if (!response.ok) { this.handle_known_http_errors(response); }
+        if (!response.ok) { BasicCloudApi.handle_known_http_errors(response); }
         return await response.json();
     }
     /**
@@ -281,13 +281,13 @@ export default class BasicCloudApi {
      * @returns the shares meta
      */
     static async get_file_share_meta(share_uuid) {
-        const api_url = this.base_url + "/api/file/share/" + share_uuid;
+        const api_url = BasicCloudApi.base_url + "/api/file/share/" + share_uuid;
         const response = await fetch(api_url,
             {
                 method: "GET",
-                headers: this.get_auth_headers(),
+                headers: BasicCloudApi.get_auth_headers(),
             });
-        if (!response.ok) { this.handle_known_http_errors(response); }
+        if (!response.ok) { BasicCloudApi.handle_known_http_errors(response); }
         return await response.json();
     }
     /**
@@ -295,12 +295,12 @@ export default class BasicCloudApi {
      * @param {string} share_uuid - the share's uuid
      */
     static async delete_file_share(share_uuid) {
-        const response = await fetch(this.base_url + "/api/file/share/" + share_uuid,
+        const response = await fetch(BasicCloudApi.base_url + "/api/file/share/" + share_uuid,
             {
                 method: "DELETE",
-                headers: this.get_auth_headers(),
+                headers: BasicCloudApi.get_auth_headers(),
             });
-        if (!response.ok) { this.handle_known_http_errors(response); }
+        if (!response.ok) { BasicCloudApi.handle_known_http_errors(response); }
     }
     /**
      * download the file from the share
@@ -308,13 +308,13 @@ export default class BasicCloudApi {
      * @returns the file as a blob
      */
     static async get_file_share_file(share_uuid) {
-        var api_url = this.base_url + "/api/file/share/" + share_uuid + "/download";
+        var api_url = BasicCloudApi.base_url + "/api/file/share/" + share_uuid + "/download";
         const response = await fetch(api_url,
             {
                 method: "GET",
-                headers: this.get_auth_headers("text/plain"),
+                headers: BasicCloudApi.get_auth_headers("text/plain"),
             });
-        if (!response.ok) { this.handle_known_http_errors(response); }
+        if (!response.ok) { BasicCloudApi.handle_known_http_errors(response); }
         return await response.blob();
     }
 }
