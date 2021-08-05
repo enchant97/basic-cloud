@@ -2,16 +2,22 @@ import * as api_errors from "./modules/errors.js";
 import * as helpers from "./modules/helpers.js";
 import Popup, { POPUP_MESSAGE_TYPE_CLASS, ButtonChoice } from "./modules/popup.js";
 import BasicCloudApi, { API_VERSION } from "./modules/api.js";
+import BasicCloudWsApi from "./modules/ws_api.js";
 
 const TOKEN_KEY = "token";
 const USERNAME_KEY = "username";
 
 var curr_dir;
 
+function new_ws_connection() {
+    BasicCloudWsApi.bearer_token = BasicCloudApi.auth_token.access_token;
+    BasicCloudWsApi.ws_connect();
+}
 /**
  * show login screen
  */
 function show_login_screen() {
+    BasicCloudWsApi.ws_finished();
     show_blank_screen();
     Popup.append_login(
         "Please Login",
@@ -166,7 +172,7 @@ class FileDirRow {
         this.name_elem.addEventListener("click", _ => {
             document.getElementById("load-shares-bnt").setAttribute("disabled", true);
             load_roots()
-                .catch (err => {
+                .catch(err => {
                     if (err instanceof api_errors.AuthError) { show_login_screen(); }
                     else { throw err; }
                 });
@@ -178,7 +184,7 @@ class FileDirRow {
             change_directory(this.path)
                 .catch(err => {
                     if (err instanceof api_errors.AuthError) { show_login_screen(); }
-                    else{ throw err; }
+                    else { throw err; }
                 });
         });
     }
@@ -368,11 +374,11 @@ function start_download_zip(directory) {
             helpers.download(url, filename);
             URL.revokeObjectURL(url);
         })
-        .catch (err => {
-        if (err instanceof api_errors.AuthError) {
-            show_login_screen();
-        }
-        else { throw err; }
+        .catch(err => {
+            if (err instanceof api_errors.AuthError) {
+                show_login_screen();
+            }
+            else { throw err; }
         });
 }
 /**
@@ -460,11 +466,11 @@ function create_dir() {
                     }
                     else {
                         Popup.append_message(
-                        "Directory Creation Error",
-                        "unhandled error",
-                        POPUP_MESSAGE_TYPE_CLASS.ERROR
+                            "Directory Creation Error",
+                            "unhandled error",
+                            POPUP_MESSAGE_TYPE_CLASS.ERROR
                         );
-                     }
+                    }
                 });
         }
         else {
@@ -533,6 +539,7 @@ async function load_roots() {
         curr_dir = null;
         document.getElementById("upload-file-bnt").setAttribute("disabled", true);
         document.getElementById("create-dir-bnt").setAttribute("disabled", true);
+        if (BasicCloudWsApi.websocket) { BasicCloudWsApi.send_move_directory(curr_dir); }
     }
     finally {
         helpers.remove_spin_loader(files_and_dirs, loading_element);
@@ -572,6 +579,7 @@ async function change_directory(new_directory) {
         document.getElementById("upload-file-bnt").removeAttribute("disabled");
         document.getElementById("create-dir-bnt").removeAttribute("disabled");
         update_curr_dir_status(new_directory.replace("\\", "/"));
+        if (BasicCloudWsApi.websocket) { BasicCloudWsApi.send_move_directory(curr_dir); }
     }
     finally {
         helpers.remove_spin_loader(files_and_dirs, loading_element);
@@ -585,6 +593,7 @@ function process_login_details(username, password, rememberme) {
     do_login(username, password, rememberme)
         .then(_ => {
             show_main_screen();
+            new_ws_connection();
             load_roots().catch(err => {
                 if (err instanceof api_errors.AuthError) {
                     show_login_screen();
@@ -650,7 +659,7 @@ function process_create_account_details(username, password, password_conf) {
 async function is_app_compatible() {
     const server_version = await BasicCloudApi.get_api_version();
     if (API_VERSION >= server_version.oldest_compatible &&
-            API_VERSION <= server_version.version) {
+        API_VERSION <= server_version.version) {
         return true;
     }
     return false;
@@ -660,7 +669,7 @@ async function is_app_compatible() {
  * initial app setup
  */
 async function app_load() {
-    if (!(await is_app_compatible())){
+    if (!(await is_app_compatible())) {
         Popup.append_message(
             "Incompatible",
             "App not compatible with server API version",
@@ -676,6 +685,7 @@ async function app_load() {
         };
         show_main_screen();
         await load_roots();
+        new_ws_connection();
     }
 }
 

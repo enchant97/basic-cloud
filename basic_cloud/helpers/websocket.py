@@ -36,11 +36,15 @@ class WebsocketHandler:
     def move(client_uuid: UUID, new_dir: Path):
         new_dir = str(new_dir)
         # remove client from current directory
+        WebsocketHandler.move_out(client_uuid)
+        # add to new directory
+        WebsocketHandler._clients_by_dir[new_dir].add(client_uuid)
+
+    @staticmethod
+    def move_out(client_uuid: UUID):
         curr_dir = WebsocketHandler._clients_by_ws.get(client_uuid)
         if curr_dir:
             WebsocketHandler._clients_by_dir[curr_dir].discard(client_uuid)
-        # add to new directory
-        WebsocketHandler._clients_by_dir[new_dir].add(client_uuid)
 
     @staticmethod
     def disconnect(client_uuid: UUID):
@@ -108,7 +112,11 @@ class WebsocketMessage:
             when = datetime.utcnow()
         payload = message["payload"]
         if msg_type == WebsocketMessageTypeReceive.DIRECTORY_CHANGE:
-            payload = PayloadClientDirectoryChange(Path(payload["directory"]))
+            directory = payload["directory"]
+            if directory is not None:
+                # alows for a 'root' path
+                directory = Path(directory)
+            payload = PayloadClientDirectoryChange(directory)
         elif msg_type == WebsocketMessageTypeSend.WATCHDOG_UPDATE:
             payload = PayloadServerDirectoryUpdate(**payload)
         return cls(msg_type, when, payload)

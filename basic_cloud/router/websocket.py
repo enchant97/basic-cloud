@@ -24,16 +24,20 @@ async def watchdog_ws(
                 data = await websocket.receive_json()
                 message = WebsocketMessage.from_dict(data)
                 if message.message_type == WebsocketMessageTypeReceive.DIRECTORY_CHANGE:
-                    real_path = create_root_path(
-                        message.payload.directory,
-                        get_settings().HOMES_PATH,
-                        get_settings().SHARED_PATH,
-                        curr_user.username,
-                    )
-                    if not real_path.exists() and not real_path.is_dir():
-                        raise PathNotExists()
+                    if message.payload.directory is None:
+                        # client has moved to the root
+                        WebsocketHandler.move_out(client_uuid)
+                    else:
+                        real_path = create_root_path(
+                            message.payload.directory,
+                            get_settings().HOMES_PATH,
+                            get_settings().SHARED_PATH,
+                            curr_user.username,
+                        )
+                        if not real_path.exists() and not real_path.is_dir():
+                            raise PathNotExists()
 
-                    WebsocketHandler.move(client_uuid, message.payload.directory)
+                        WebsocketHandler.move(client_uuid, message.payload.directory)
 
             except (ValueError, KeyError):
                 # TODO handle this better
