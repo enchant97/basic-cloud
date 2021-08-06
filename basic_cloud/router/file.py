@@ -298,9 +298,11 @@ async def delete_file_share(
         curr_user: models.User = Depends(get_current_active_user)):
     try:
         file_share = await crud.get_file_share_by_uuid(share_uuid)
+        fake_path = (await file_share.fake_path.get()).path
+
         # makes sure user has access to path
         create_root_path(
-            file_share.path,
+            fake_path,
             get_settings().HOMES_PATH,
             get_settings().SHARED_PATH,
             curr_user.username,
@@ -322,9 +324,11 @@ async def get_file_share_meta(
         curr_user: models.User = Depends(get_current_active_user)):
     try:
         file_share = await crud.get_file_share_by_uuid(share_uuid)
+        fake_path = (await file_share.fake_path.get()).path
+
         # makes sure user has access to path
         create_root_path(
-            file_share.path,
+            fake_path,
             get_settings().HOMES_PATH,
             get_settings().SHARED_PATH,
             curr_user.username,
@@ -344,6 +348,7 @@ async def get_file_share_meta(
 async def get_file_share_file(share_uuid: UUID):
     try:
         file_share = await crud.get_file_share_by_uuid(share_uuid)
+        fake_path = (await file_share.fake_path.get()).path
 
         # make sure share isn't expired or has run out of uses
         if ((file_share.expires is not None and file_share.expires < timezone.now()) or
@@ -351,7 +356,7 @@ async def get_file_share_file(share_uuid: UUID):
             raise SharePathInvalid()
 
         full_path = create_root_path(
-            file_share.path,
+            fake_path,
             get_settings().HOMES_PATH,
             get_settings().SHARED_PATH,
         )
