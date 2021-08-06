@@ -38,6 +38,7 @@ class WebsocketHandler:
         # remove client from current directory
         WebsocketHandler.move_out(client_uuid)
         # add to new directory
+        WebsocketHandler._clients_by_ws[client_uuid] = new_dir
         WebsocketHandler._clients_by_dir[new_dir].add(client_uuid)
 
     @staticmethod
@@ -49,7 +50,8 @@ class WebsocketHandler:
     @staticmethod
     def disconnect(client_uuid: UUID):
         curr_dir = WebsocketHandler._clients_by_ws.pop(client_uuid, None)
-        WebsocketHandler._clients_by_dir[curr_dir].discard(client_uuid)
+        if curr_dir:
+            WebsocketHandler._clients_by_dir[curr_dir].discard(client_uuid)
         del WebsocketHandler._ws_by_uuid[client_uuid]
 
     @staticmethod
