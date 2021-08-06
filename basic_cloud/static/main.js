@@ -665,14 +665,40 @@ function process_create_account_details(username, password, password_conf) {
     }
 }
 
+/**
+ * calls change_directory with the curr_dir,
+ * and handles any errors
+ */
+function refresh_current_directory() {
+    change_directory(curr_dir).catch(err => {
+        if (err instanceof api_errors.AuthError) { show_login_screen(); }
+        else { throw err; }
+    });
+}
+
+/**
+ * called on a watchdog update from the server
+ * @param {object} content_change - the content change payload
+ */
 function handle_watchdog_update(content_change) {
-    if (content_change.change_type != CONTENT_CHANGE_TYPES.SHARED ||
-        content_change.change_type != CONTENT_CHANGE_TYPES.DOWNLOAD) {
-        // TODO make a refresh directory method
-        change_directory(curr_dir).catch(err => {
-            if (err instanceof api_errors.AuthError) { show_login_screen(); }
-            else { throw err; }
-        });
+    switch (content_change.change_type) {
+        case CONTENT_CHANGE_TYPES.CREATION:
+            refresh_current_directory();
+            break;
+        case CONTENT_CHANGE_TYPES.DELETION:
+            if (curr_dir.startsWith(content_change.path)) {
+                // current path was removed, go back to 'roots'
+                Popup.append_message(
+                    "Directory Deleted",
+                    "The directory path you were in was deleted",
+                    POPUP_MESSAGE_TYPE_CLASS.WARNING,
+                    go_to_shares,
+                );
+            }
+            else {
+                refresh_current_directory();
+            }
+            break;
     }
 }
 
