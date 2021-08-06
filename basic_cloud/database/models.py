@@ -35,7 +35,7 @@ class FakePath(Model):
         path: the actual path
         is_dir: whether path is a directory
     """
-    path_hash = Sha256Field(pk=True)
+    path_hash = Sha256Field(unique=True)
     path = PathField()
     is_dir = BooleanField()
 
@@ -54,7 +54,7 @@ class ContentChange(Model):
     """
     fake_path: ForeignKeyRelation[FakePath] = ForeignKeyField(
         "models.FakePath",
-        "shares",
+        "content_changes",
     )
     created_at = DatetimeField(auto_now_add=True)
     type_enum = IntEnumField(ContentChangeTypes)
@@ -78,7 +78,7 @@ class Share(Model):
     uuid = UUIDField(pk=True)
     fake_path: ForeignKeyRelation[FakePath] = ForeignKeyField(
         "models.FakePath",
-        "content_changes",
+        "shares",
     )
     expires = DatetimeField(null=True)
     uses_left = IntField(null=True)

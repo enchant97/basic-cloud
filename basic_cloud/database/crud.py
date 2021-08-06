@@ -4,7 +4,8 @@ from typing import List
 from uuid import UUID
 
 from ..helpers.constants import ContentChangeTypes
-from .models import ContentChange, FileShare, User
+from .models import ContentChange, FakePath, Share, User
+from .models import Share as FileShare
 
 # USER CRUD
 
@@ -58,10 +59,10 @@ async def create_content_change(
         is_dir: bool,
         triggered_by: User = None,
         extra_meta: dict = None) -> ContentChange:
+    fake_path = await FakePath.get_or_create({"path": path, "is_dir": is_dir}, path_hash=path)
     kwargs = {
-        "path_hash": path,
+        "fake_path": fake_path[0],
         "type_enum": change_type,
-        "is_dir": is_dir,
         "triggered_by": triggered_by,
         "extra_meta": extra_meta,
     }
@@ -71,14 +72,18 @@ async def create_content_change(
 
 
 async def get_content_changes_by_path(path: Path) -> List[ContentChange]:
-    return await ContentChange.filter(path_hash=path).all()
+    fake_path = await FakePath.get_or_none(path_hash=path)
+    if fake_path:
+        return await ContentChange.filter(fake_path=fake_path).all()
+    return []
 
 # FILE SHARE CRUD
 
 
 async def create_file_share(filepath: Path, expires: datetime, uses_left: int) -> FileShare:
+    fake_path = await FakePath.get_or_create({"path": filepath, "is_dir": False}, path_hash=filepath)
     file_share = FileShare(
-        path_hash=filepath,
+        fake_path=fake_path[0],
         path=filepath,
         expires=expires,
         uses_left=uses_left
@@ -92,7 +97,10 @@ async def get_file_share_by_uuid(share_uuid: UUID) -> FileShare:
 
 
 async def get_shares_by_filepath(filepath: Path) -> List[FileShare]:
-    return await FileShare.filter(path_hash=str(filepath)).all()
+    fake_path = await FakePath.get_or_none(path_hash=filepath)
+    if fake_path:
+        return await FileShare.filter(fake_path=fake_path).all()
+    return []
 
 
 async def delete_file_share(share_uuid: UUID):
