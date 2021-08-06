@@ -27,20 +27,37 @@ class User(Model, ModifyMixin):
     content_changes: ReverseRelation["ContentChange"]
 
 
+class FakePath(Model):
+    """
+    store a 'fake' path
+
+        path_hash: the unique hash of the path
+        path: the actual path
+        is_dir: whether path is a directory
+    """
+    path_hash = Sha256Field(pk=True)
+    path = PathField()
+    is_dir = BooleanField()
+
+    content_changes: ReverseRelation["ContentChange"]
+    shares: ReverseRelation["Share"]
+
+
 class ContentChange(Model):
     """
     marks each change to the shares
 
+        fake_path: the path that it relates to
         created_at: datetime stamp when the change occured
-        path_hash: the path hashed (allows for different path lengths)
         type_enum: the type of change that occured
-        is_dir: whether the path is a directory
         extra_meta: any extra meta to store
     """
+    fake_path: ForeignKeyRelation[FakePath] = ForeignKeyField(
+        "models.FakePath",
+        "shares",
+    )
     created_at = DatetimeField(auto_now_add=True)
-    path_hash = Sha256Field()
     type_enum = IntEnumField(ContentChangeTypes)
-    is_dir = BooleanField()
     triggered_by: ForeignKeyRelation[User] = ForeignKeyField(
         "models.User",
         "content_changes",
@@ -49,18 +66,19 @@ class ContentChange(Model):
     extra_meta = JSONField(null=True)
 
 
-class FileShare(Model):
+class Share(Model):
     """
-    a file that was shared
+    a path that was shared
 
         uuid: the primary key
-        path_hash: the filepath (hashed)
-        path: the unhashed filepath
+        fake_path: the path that it relates to
         expires: when the link expires (or not)
         uses_left: how many uses are left (if has use limit)
     """
     uuid = UUIDField(pk=True)
-    path_hash = Sha256Field()
-    path = PathField()
+    fake_path: ForeignKeyRelation[FakePath] = ForeignKeyField(
+        "models.FakePath",
+        "content_changes",
+    )
     expires = DatetimeField(null=True)
     uses_left = IntField(null=True)
