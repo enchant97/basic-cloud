@@ -5,6 +5,9 @@ You could even pair this with a NAS for a fancy web interface and network shares
 
 > Take note this project is currently in early stages of development, this warning will be removed when v1.0 is released
 
+## EOL
+This was started a while ago and it could be achieved in a better way. A simular app will return...
+
 ## Features
 - User Accounts
 - Personal and shared share
